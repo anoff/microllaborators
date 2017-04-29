@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<!-- three.js library -->
+<script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/85/three.js'></script>
+<!-- ar.js -->
+<script src="lib/ar.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.9.0/firebase.js"></script>
+
+<body style='margin : 0px; overflow: hidden; font-family: Monospace;'><div style='position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
+
+<script>
+	const FPS_STATS = true; // enable/disable fps counter on top
+	const IMAGE = 'grumpy.jpg'; // name of the image (in assets/)
+	const image_path = 'assets/' + IMAGE;
+	//////////////////////////////////////////////////////////////////////////////////
+	//		Init
+	//////////////////////////////////////////////////////////////////////////////////
+	// init renderer
+	const renderer	= new THREE.WebGLRenderer({
+		antialias	: false,
+		alpha: true
+	});
+	renderer.setClearColor(new THREE.Color('lightgrey'), 0);
+	renderer.setSize( 640, 480 );
+	renderer.domElement.style.position = 'absolute';
+	renderer.domElement.style.top = '0px';
+	renderer.domElement.style.left = '0px';
+	document.body.appendChild( renderer.domElement );
+	// array of functions for the rendering loop
+	const onRenderFcts= [];
+	// init scene and camera
+	const scene	= new THREE.Scene();
+
+	// required for raytracing
+  const mouse = { x:0, y:0 };
+  const names = ['Tim', 'Max', 'Tom', 'Kai', 'Sam', 'Jay', 'Guy', 'Jim'];
+  const name = names[Math.floor(Math.random() * names.length)];
+  const removeDelay = 10000;
+	// unique ID for this session (used for storing marker ID)
+  const uid = new Date().getMilliseconds()+Math.floor(Math.random() * 1000);
+
+	// add fps stats
+	if (FPS_STATS) {
+		const stats = new Stats();
+		document.body.appendChild( stats.domElement );
+		onRenderFcts.push(() => {
+			stats.update();
+		});
+	}
+
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyBjCuNgKFQI5zOvusmt3wrB8cWoKd9e_eI",
+    authDomain: "zeisshack-8500b.firebaseapp.com",
+    databaseURL: "https://zeisshack-8500b.firebaseio.com",
+    projectId: "zeisshack-8500b",
+    storageBucket: "zeisshack-8500b.appspot.com",
+    messagingSenderId: "580810798803"
+  };
+  firebase.initializeApp(config);
+
+  // Get all markers and place them
+  getAllMarkerData();
+
+	//////////////////////////////////////////////////////////////////////////////////
+	//		Initialize a basic camera
+	//////////////////////////////////////////////////////////////////////////////////
+	// Create a camera
+	const camera = new THREE.Camera();
+	scene.add(camera);
+	////////////////////////////////////////////////////////////////////////////////
+	//          handle arToolkitSource
+	////////////////////////////////////////////////////////////////////////////////
+	const arToolkitSource = new THREEx.ArToolkitSource({
+		// to read from the webcam 
+		//sourceType : 'webcam'
+		sourceType : 'image',
+		sourceUrl : 'assets/hiro_screenshot.png',
+	});
+	arToolkitSource.init(function onReady(){
+		// handle resize of renderer
+		arToolkitSource.onResize(renderer.domElement)		
+	});
+	
+	// handle resize
+	window.addEventListener('resize', function(){
+		// handle arToolkitSource resize
+		arToolkitSource.onResize(renderer.domElement)		
+	});
+	////////////////////////////////////////////////////////////////////////////////
+	//          initialize arToolkitContext
+	////////////////////////////////////////////////////////////////////////////////
+	
+	// create atToolkitContext
+	const arToolkitContext = new THREEx.ArToolkitContext({
+		cameraParametersUrl: 'markers/camera_para.dat',
+		detectionMode: 'mono'
+	});
+	// initialize it
+	arToolkitContext.init(function onCompleted(){
+		// copy projection matrix to camera
+		camera.projectionMatrix.copy( arToolkitContext.getProjectionMatrix() );
+	});
+	// update artoolkit on every frame
+	onRenderFcts.push(function(){
+		if( arToolkitSource.ready === false )	return;
+		arToolkitContext.update( arToolkitSource.domElement );
+		
+		// update scene.visible if the marker is seen
+		scene.visible = camera.visible
+	});
+		
+	////////////////////////////////////////////////////////////////////////////////
+	const markerControls = new THREEx.ArMarkerControls(arToolkitContext, camera, {
+		type : 'pattern',
+		patternUrl : 'markers/hiro.pat',
+		changeMatrixMode: 'cameraTransformMatrix'
+	});
+	// as we do changeMatrixMode: 'cameraTransformMatrix', start with invisible scene
+	scene.visible = false;
+	//////////////////////////////////////////////////////////////////////////////////
+	//		add an object in the scene
+	//////////////////////////////////////////////////////////////////////////////////
+	// add a torus knot	
+	
+	const geometry	= new THREE.PlaneGeometry(5, 5, 100, 100);
+	const textureLoader = new THREE.TextureLoader();
+	const displacementMap = textureLoader.load(image_path);
+	const texture = textureLoader.load(image_path);
+
+	const material = new THREE.MeshPhongMaterial( {
+		displacementMap: displacementMap,
+		displacementScale: 0, // 0.5
+		displacementBias: 0.5,
+		map: texture
+	} );
+
+	const plane = new THREE.Mesh( geometry, material);
+	plane.rotation.x = Math.PI*1.5;
+	scene.add( plane );
+
+	const light = new THREE.AmbientLight( 0xffffff ); // soft white light
+	scene.add( light );
+	//////////////////////////////////////////////////////////////////////////////////
+	//		render the whole thing on the page
+	//////////////////////////////////////////////////////////////////////////////////
+	// render the scene
+	onRenderFcts.push(function(){
+		renderer.render( scene, camera );
+	});
+	// run the rendering loop
+	let lastTimeMsec= null;
+	requestAnimationFrame(function animate(nowMsec){
+		// keep looping
+		requestAnimationFrame( animate );
+		// measure time
+		lastTimeMsec	= lastTimeMsec || nowMsec-1000/60;
+		const deltaMsec	= Math.min(200, nowMsec - lastTimeMsec);
+		lastTimeMsec	= nowMsec;
+		// call each update function
+		onRenderFcts.forEach(function(onRenderFct){
+			onRenderFct(deltaMsec/1000, nowMsec/1000)
+		})
+	});
+
+  // place a marker on the plane
+  document.addEventListener("mousedown", handleClick);
+
+  function getRayCaster() {
+    // normalized device coordinates
+    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+    const raycaster = new THREE.Raycaster();
+    const vector = new THREE.Vector3( mouse.x, mouse.y , 1).unproject( camera );
+    raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
+
+    return raycaster;
+  }
+
+  function handleClick() {
+    const raycaster = getRayCaster();
+    const vec = raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0)));
+
+    if (vec) {
+			const marker = {
+        position: {
+          x: vec.x,
+          y: vec.y,
+          z: vec.z
+        },
+        name,
+				uid
+      };
+			// placemarker on scene
+      placeMarker(marker);
+			// update marker in database
+      writeMarkerData(marker);
+    }
+  }
+
+  setInterval(() => {
+    getAllMarkerData();
+  }, 500);
+
+  function getAllMarkerData () {
+    firebase.database().ref('/markers').once('value').then(function(snapshot) {
+      const oldMarkers = [];
+
+      for( var i = scene.children.length - 1; i >= 0;) {
+        if (scene.children[i] && scene.children[i].geometry && (scene.children[i].geometry.constructor.name === 'CylinderGeometry' ||
+          scene.children[i].geometry.constructor.name === 'TextGeometry')) {
+          scene.remove(scene.children[i]);
+        }
+        i--;
+      }
+
+      for (let id in snapshot.val()) {
+        placeMarker(snapshot.val()[id]);
+      }
+    });
+  }
+
+  // write marker to database
+  function writeMarkerData ({position, name, uid}) {
+		console.log(uid)
+    firebase.database().ref('markers/' + uid).set({
+      position: position,
+      name: name
+    });
+  }
+
+	let prev_marker;
+  function placeMarker (marker) {
+    const vec = marker.position;
+
+    const colorMat	= new THREE.MeshBasicMaterial({
+      color: new THREE.Color( 0x000000 ),
+      side: THREE.DoubleSide
+    });
+
+    const cylGeo	= new THREE.CylinderGeometry(0.05, 0.005, 0.25, 12);
+    const colorCylMesh	= new THREE.Mesh( cylGeo, colorMat );
+    colorCylMesh.position.x	= vec.x + cylGeo.parameters.radiusTop;
+    colorCylMesh.position.y	= cylGeo.parameters.height / 2;
+    colorCylMesh.position.z	= vec.z;
+    scene.add( colorCylMesh );
+		if (prev_marker) {
+			scene.remove( prev_marker );
+		}
+		prev_marker = colorCylMesh;
+  }
+
+</script></body>
