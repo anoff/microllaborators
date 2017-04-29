@@ -87,7 +87,7 @@
 	// init controls for camera
 	var markerControls = new THREEx.ArMarkerControls(arToolkitContext, camera, {
 		type : 'pattern',
-		patternUrl : 'lib/patt.hiro',
+		patternUrl : 'markers/hiro.pat',
 		// patternUrl : '../../data/data/patt.kanji',
 		// as we controls the camera, set changeMatrixMode: 'cameraTransformMatrix'
 		changeMatrixMode: 'cameraTransformMatrix'
@@ -98,25 +98,25 @@
 	//		add an object in the scene
 	//////////////////////////////////////////////////////////////////////////////////
 	// add a torus knot	
-	var geometry	= new THREE.CubeGeometry(1,1,1);
-	var material	= new THREE.MeshNormalMaterial({
-		transparent : true,
-		opacity: 0.5,
-		side: THREE.DoubleSide
-	}); 
-	var mesh	= new THREE.Mesh( geometry, material );
-	mesh.position.y	= geometry.parameters.height/2
-	scene.add( mesh );
 	
-	var geometry	= new THREE.TorusKnotGeometry(0.3,0.1,32,32);
-	var material	= new THREE.MeshNormalMaterial(); 
-	var mesh	= new THREE.Mesh( geometry, material );
-	mesh.position.y	= 0.5
-	scene.add( mesh );
-	
-	onRenderFcts.push(function(delta){
-		mesh.rotation.x += Math.PI*delta
-	})
+	var geometry	= new THREE.PlaneGeometry(1, 1, 80, 60);
+	var textureLoader = new THREE.TextureLoader();
+	var displacementMap = textureLoader.load( "image_bw_800x600.jpg" );
+	var texture = textureLoader.load("image.jpg");
+
+	var material = new THREE.MeshPhongMaterial( {
+		displacementMap: displacementMap,
+		displacementScale: 0.1,
+		displacementBias: 0, // from original model
+		map: texture
+	} );
+
+	var plane = new THREE.Mesh( geometry, material);
+	plane.rotation.x = Math.PI*1.5
+	scene.add( plane );
+
+	var light = new THREE.AmbientLight( 0xffffff ); // soft white light
+	scene.add( light );
 	//////////////////////////////////////////////////////////////////////////////////
 	//		render the whole thing on the page
 	//////////////////////////////////////////////////////////////////////////////////
