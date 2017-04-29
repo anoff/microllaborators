@@ -10,7 +10,21 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/3.9.0/firebase.js"></script>
 
+<style>
+  .header {
+    background-color: black;
+    position: absolute;
+    left: 80%;
+    width: 20%;
+    height: 200px;
+  }
+</style>
+
 <body style='margin : 0px; overflow: hidden; font-family: Monospace;'><div style='position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
+
+  <div class="header">
+
+  </div>
 
 <script>
 	const FPS_STATS = true; // enable/disable fps counter on top
@@ -124,8 +138,8 @@
 	
 	const geometry	= new THREE.PlaneGeometry(5, 5, 1, 100);
 	const textureLoader = new THREE.TextureLoader();
-	const displacementMap = textureLoader.load("image_bw.jpg");
-	const texture = textureLoader.load("grumpy.jpg");
+	const displacementMap = textureLoader.load("./assets/image_bw.jpg");
+	const texture = textureLoader.load("./assets/grumpy.jpg");
 
 	const material = new THREE.MeshPhongMaterial( {
 		displacementMap: displacementMap,
