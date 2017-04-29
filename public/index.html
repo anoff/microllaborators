@@ -158,20 +158,17 @@
 	});
 	
 	function togglePresent(){
-		if( vrDisplay.capabilities.canPresent === false ){
+		if(!vrDisplay.capabilities.canPresent) {
 			alert('You vr display can not present!')
 			return
 		}
-		if( vrDisplay.isPresenting ){
+		if (vrDisplay.isPresenting) {
 			vrDisplay.exitPresent()
-		}else{
+		} else {
 			vrDisplay.requestPresent([{source: renderer.domElement}]);
 		}
 	}
-	document.body.addEventListener('keypress', function(event){
-		if( event.key === 'p' )	togglePresent()
-	})
-	document.body.addEventListener('click', function(event){
+	document.body.addEventListener('click', function(event) {
 		togglePresent()
 	})
 </script></body>

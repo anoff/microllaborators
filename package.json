@@ -2,7 +2,7 @@
   "name": "zeisshack",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -10,7 +10,10 @@
     "type": "git",
     "url": "git+https://github.com/anoff/zeisshack.git"
   },
-  "author": "",
+  "authors": [
+    "Tim Grossmann <https://github.com/timgrossmann>",
+    "Andreas Offenhaeuser <http://anoff.io>"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/anoff/zeisshack/issues"
