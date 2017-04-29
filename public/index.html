@@ -21,17 +21,22 @@
 		antialias	: false,
 		alpha: true
 	});
-	renderer.setClearColor(new THREE.Color('lightgrey'), 0)
+	renderer.setClearColor(new THREE.Color('lightgrey'), 0);
 	renderer.setSize( 640, 480 );
-	renderer.domElement.style.position = 'absolute'
-	renderer.domElement.style.top = '0px'
-	renderer.domElement.style.left = '0px'
+	renderer.domElement.style.position = 'absolute';
+	renderer.domElement.style.top = '0px';
+	renderer.domElement.style.left = '0px';
 	document.body.appendChild( renderer.domElement );
 	// array of functions for the rendering loop
 	const onRenderFcts= [];
 	// init scene and camera
 	const scene	= new THREE.Scene();
-	
+
+	// required for raytracing
+  const mouse = { x:0, y:0 };
+  const names = ['Tim', 'Max', 'Tom', 'Kai', 'Sam', 'Jay', 'Guy', 'Jim'];
+  const removeDelay = 10000;
+
 	// add fps stats
 	if (FPS_STATS) {
 		const stats = new Stats();
@@ -51,18 +56,18 @@
 	////////////////////////////////////////////////////////////////////////////////
 	const arToolkitSource = new THREEx.ArToolkitSource({
 		// to read from the webcam 
-		sourceType : 'webcam',
-	})
+		sourceType : 'webcam'
+	});
 	arToolkitSource.init(function onReady(){
 		// handle resize of renderer
 		arToolkitSource.onResize(renderer.domElement)		
-	})
+	});
 	
 	// handle resize
 	window.addEventListener('resize', function(){
 		// handle arToolkitSource resize
 		arToolkitSource.onResize(renderer.domElement)		
-	})	
+	});
 	////////////////////////////////////////////////////////////////////////////////
 	//          initialize arToolkitContext
 	////////////////////////////////////////////////////////////////////////////////
@@ -70,36 +75,36 @@
 	// create atToolkitContext
 	const arToolkitContext = new THREEx.ArToolkitContext({
 		cameraParametersUrl: 'lib/camera_para.dat',
-		detectionMode: 'mono',
-	})
+		detectionMode: 'mono'
+	});
 	// initialize it
 	arToolkitContext.init(function onCompleted(){
 		// copy projection matrix to camera
 		camera.projectionMatrix.copy( arToolkitContext.getProjectionMatrix() );
-	})
+	});
 	// update artoolkit on every frame
 	onRenderFcts.push(function(){
-		if( arToolkitSource.ready === false )	return
-		arToolkitContext.update( arToolkitSource.domElement )
+		if( arToolkitSource.ready === false )	return;
+		arToolkitContext.update( arToolkitSource.domElement );
 		
 		// update scene.visible if the marker is seen
 		scene.visible = camera.visible
-	})
+	});
 		
 	////////////////////////////////////////////////////////////////////////////////
 	const markerControls = new THREEx.ArMarkerControls(arToolkitContext, camera, {
 		type : 'pattern',
 		patternUrl : 'markers/hiro.pat',
 		changeMatrixMode: 'cameraTransformMatrix'
-	})
+	});
 	// as we do changeMatrixMode: 'cameraTransformMatrix', start with invisible scene
-	scene.visible = false
+	scene.visible = false;
 	//////////////////////////////////////////////////////////////////////////////////
 	//		add an object in the scene
 	//////////////////////////////////////////////////////////////////////////////////
 	// add a torus knot	
 	
-	const geometry	= new THREE.PlaneGeometry(2, 2, 100, 100);
+	const geometry	= new THREE.PlaneGeometry(5, 5, 1, 100);
 	const textureLoader = new THREE.TextureLoader();
 	const displacementMap = textureLoader.load("image_bw.jpg");
 	const texture = textureLoader.load("grumpy.jpg");
@@ -112,7 +117,7 @@
 	} );
 
 	const plane = new THREE.Mesh( geometry, material);
-	plane.rotation.x = Math.PI*1.5
+	plane.rotation.x = Math.PI*1.5;
 	scene.add( plane );
 
 	const light = new THREE.AmbientLight( 0xffffff ); // soft white light
@@ -123,71 +128,109 @@
 	// render the scene
 	onRenderFcts.push(function(){
 		renderer.render( scene, camera );
-	})
+	});
 	// run the rendering loop
-	let lastTimeMsec= null
+	let lastTimeMsec= null;
 	requestAnimationFrame(function animate(nowMsec){
 		// keep looping
 		requestAnimationFrame( animate );
 		// measure time
-		lastTimeMsec	= lastTimeMsec || nowMsec-1000/60
-		const deltaMsec	= Math.min(200, nowMsec - lastTimeMsec)
-		lastTimeMsec	= nowMsec
+		lastTimeMsec	= lastTimeMsec || nowMsec-1000/60;
+		const deltaMsec	= Math.min(200, nowMsec - lastTimeMsec);
+		lastTimeMsec	= nowMsec;
 		// call each update function
 		onRenderFcts.forEach(function(onRenderFct){
 			onRenderFct(deltaMsec/1000, nowMsec/1000)
 		})
-	})
-
-
-	// Apply VR stereo rendering to renderer.
-	let vrEffect = null
-	if( true ){
-		vrEffect = new THREE.VREffect(renderer);
-		vrEffect.setSize(window.innerWidth, window.innerHeight);
-	}
-	// Get the VRDisplay and save it for later.
-	let vrDisplay = null;
-	navigator.getVRDisplays().then(function(displays){
-		if (displays.length > 0) {
-			vrDisplay = displays[0];
-		}
 	});
-	window.addEventListener('vrdisplaypresentchange', function onVRDisplayPresentChange() {
-		console.log('WEEEEE')
-		console.log(onResize)
-		onResize();
-	});
-	
-	function togglePresent(){
-		if(!vrDisplay.capabilities.canPresent) {
-			alert('You vr display can not present!')
-			return
-		}
-		if (vrDisplay.isPresenting) {
-			vrDisplay.exitPresent()
-		} else {
-			vrDisplay.requestPresent([{source: renderer.domElement}]);
-		}
-	}
-	function onResize() {
-		// handle arToolkitSource resize
-		arToolkitSource.onResize(renderer.domElement)		
-		
-		// get width/height from arToolkitSource.domElement
-		var elementWidth = parseFloat( arToolkitSource.domElement.style.width.replace(/px$/,''), 10 )
-		var elementHeight = parseFloat( arToolkitSource.domElement.style.height.replace(/px$/,''), 10 )
-		
-		if( vrEffect !== null ){
-			vrEffect.setSize(elementWidth, elementHeight);
-		}
-		
-		if( camera instanceof THREE.PerspectiveCamera === true ){
-			camera.aspect = elementWidth / elementHeight;
-			camera.updateProjectionMatrix();			
-		}
-	}
-	document.body.addEventListener('click', function(event) {
-		togglePresent()
-	})
+
+  // place a marker on the plane
+  document.addEventListener("mousedown", onMouseDown);
+
+  function onMouseDown(event) {
+    handleClick();
+  }
+
+  function getRayCaster() {
+    // normalized device coordinates
+    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+    const raycaster = new THREE.Raycaster();
+    const vector = new THREE.Vector3( mouse.x, mouse.y , 1).unproject( camera );
+    raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
+
+    return raycaster;
+  }
+
+  function handleClick() {
+    const raycaster = getRayCaster();
+    const vec = raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0)));
+
+    const colorMat	= new THREE.MeshBasicMaterial({
+      color: new THREE.Color( 0x000000 ),
+      side: THREE.DoubleSide
+    });
+
+    const outlineMat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color( 0xffffff ),
+      side: THREE.BackSide
+    });
+
+    const textMat	= new THREE.MeshBasicMaterial({
+      color: new THREE.Color( 0xffffff ),
+      side: THREE.DoubleSide
+    });
+
+    if (vec) {
+      const cylGeo	= new THREE.CylinderGeometry(0.05, 0.005, 0.25, 12);
+      const colorCylMesh	= new THREE.Mesh( cylGeo, colorMat );
+      colorCylMesh.position.x	= vec.x + cylGeo.parameters.radiusTop;
+      colorCylMesh.position.y	= cylGeo.parameters.height / 2;
+      colorCylMesh.position.z	= vec.z;
+      scene.add( colorCylMesh );
+
+      const outlineCylMesh	= new THREE.Mesh( cylGeo, outlineMat );
+      outlineCylMesh.position.x	= vec.x + cylGeo.parameters.radiusTop;
+      outlineCylMesh.position.y	= cylGeo.parameters.height / 2;
+      outlineCylMesh.position.z	= vec.z;
+      outlineCylMesh.scale.multiplyScalar(1.05);
+      scene.add( outlineCylMesh );
+
+      const loader = new THREE.FontLoader();
+
+      loader.load( '../assets/helvetiker_bold.typeface.json', function ( font ) {
+
+        const size = 0.05;
+
+        const nameGeometry = new THREE.TextGeometry(names[Math.floor(Math.random() * names.length)], {
+          font: font,
+          size: size,
+          height: 0.001,
+          curveSegments: 12
+        });
+
+        const colorMesh	= new THREE.Mesh( nameGeometry, textMat );
+        colorMesh.position.x	= vec.x;
+        colorMesh.position.y	= cylGeo.parameters.height + cylGeo.parameters.height / 2;
+        colorMesh.position.z	= vec.z;
+        scene.add( colorMesh );
+
+        const backdropGeometry = new THREE.PlaneGeometry(0.15, 0.1, 1);
+        const backdropMesh = new THREE.Mesh(backdropGeometry, colorMat);
+        backdropMesh.position.x	= vec.x + backdropGeometry.parameters.width / 2.5;
+        backdropMesh.position.y	= cylGeo.parameters.height + backdropGeometry.parameters.height * 1.5;
+        backdropMesh.position.z	= vec.z - 0.01;
+        scene.add(backdropMesh);
+
+        setTimeout(() => {
+          scene.remove(colorCylMesh);
+          scene.remove(outlineCylMesh);
+          scene.remove(colorMesh);
+          scene.remove(backdropMesh);
+        }, removeDelay);
+      });
+
+    }
+  }
 </script></body>
