@@ -58,6 +58,7 @@
   <div class="headerBar">
     <h3>Question:</h3>
     <input type="text" id="questionInput" />
+    <button onclick="clearMarkers()">Clear Markers</button>
   </div>
 
   <div class="rightBar">
@@ -68,7 +69,7 @@
 
 <script>
 	const FPS_STATS = false; // enable/disable fps counter on top
-	const STATIC_IMAGE = true; // enable for debug (no webcam)
+	const STATIC_IMAGE = false; // enable for debug (no webcam)
 	const IMAGE = 'pollen.jpg'; // name of the image (in assets/)
 
 	const MAX_RADIUS = 0.5; // maximum radius to be away from the teacher points
@@ -174,7 +175,7 @@
 	////////////////////////////////////////////////////////////////////////////////
 	const markerControls = new THREEx.ArMarkerControls(arToolkitContext, camera, {
 		type : 'pattern',
-		patternUrl : '../markers/hiro.pat',
+		patternUrl : '../markers/zeiss.pat',
 		changeMatrixMode: 'cameraTransformMatrix'
 	});
 	// as we do changeMatrixMode: 'cameraTransformMatrix', start with invisible scene
@@ -262,6 +263,8 @@
 
   function getAllMarkerData () {
     firebase.database().ref('/markers').once('value').then(function(snapshot) {
+
+
       const teacherPositions = [];
       const teacherIds = [];
 
@@ -342,4 +345,8 @@
     firebase.database().ref('question/').set(question);
   }
 
+  // clear all markers
+  function clearMarkers () {
+    firebase.database().ref('markers/').set(null);
+  }
 </script></body>
