@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "nodemon server",
-    "publish": "surge --domain https://zeisshack.surge.sh --project public"
+    "publish": "surge --domain https://zeisshack.science --project public"
   },
   "repository": {
     "type": "git",
