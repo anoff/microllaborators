@@ -7,7 +7,43 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/3.9.0/firebase.js"></script>
 
-<body style='margin : 0px; overflow: hidden; font-family: Monospace;'><div style='position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
+<style>
+  body {
+    margin : 0px;
+    overflow: hidden;
+  }
+
+  .arContainer {
+    position: absolute;
+    width:100%;
+    text-align: center;
+    z-index: 10;
+    margin: 0;
+  }
+
+  .questionBar {
+    width: 100%;
+    height: 40px;
+    z-index: 1;
+    background-color: rgba(255, 255, 255, 0.7);
+    position: absolute;
+    display: flex;
+  }
+
+  #questionText {
+    font-size: 1.2em;
+    margin: 10px 0 10px 50px;
+  }
+
+</style>
+
+<body>
+
+  <div class="questionBar">
+    <h3 id="questionText">Question:</h3>
+  </div>
+
+  <div class="arContainer">
 
 <script>
 	const FPS_STATS = true; // enable/disable fps counter on top
@@ -224,5 +260,12 @@
 		}
 		prev_marker = colorCylMesh;
   }
+
+  // change the question text
+  firebase.database().ref('question')
+    .on('value', snapshot => {
+    const questionElm = document.getElementById('questionText');
+    questionElm.innerHTML = 'Question: ' + snapshot.val();
+  });
 
 </script></body>
