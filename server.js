@@ -10,6 +10,7 @@ const options = {
   cert: fs.readFileSync("domain.crt")
 }
 app.use(express.static('public'));
+app.use('node_modules/', express.static('public'));
 
 const server = https.createServer(options, app);
 
