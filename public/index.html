@@ -11,31 +11,48 @@
 <script src="https://www.gstatic.com/firebasejs/3.9.0/firebase.js"></script>
 
 <style>
+  body {
+    padding:0;
+    margin: 0;
+    overflow: hidden;
+  }
+
   .header {
-    background-color: black;
+    background-color: rgba(255, 255, 255, 0.6);
     position: absolute;
-    left: 80%;
-    width: 20%;
-    height: 200px;
+    left: 90%;
+    width: 10%;
+    height: 500px;
+    margin: 0;
+    padding-top: 10px;
+    text-align: center;
+    font-size: 1.2em;
+  }
+
+  .header li {
+    list-style-type: none;
   }
 </style>
 
-<body style='margin : 0px; overflow: hidden; font-family: Monospace;'><div style='position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
+<body>
+  <div style='width:100%; z-index: 1;'>
 
   <div class="header">
-
+    <ul id="nameList"></ul>
   </div>
 
 <script>
-	const FPS_STATS = true; // enable/disable fps counter on top
+	const FPS_STATS = false; // enable/disable fps counter on top
 	const IMAGE = 'grumpy.jpg'; // name of the image (in assets/)
 	const image_path = 'assets/' + IMAGE;
+
+	const MAX_RADIUS = 0.1; // maximum radius to be away from the teacher points
 	//////////////////////////////////////////////////////////////////////////////////
 	//		Init
 	//////////////////////////////////////////////////////////////////////////////////
 	// init renderer
 	const renderer	= new THREE.WebGLRenderer({
-		antialias	: false,
+		antialias	: true,
 		alpha: true
 	});
 	renderer.setClearColor(new THREE.Color('lightgrey'), 0);
@@ -54,7 +71,7 @@
   const names = ['Tim', 'Max', 'Tom', 'Kai', 'Sam', 'Jay', 'Guy', 'Jim'];
   const name = names[Math.floor(Math.random() * names.length)];
   const removeDelay = 10000;
-  const uid = new Date().getMilliseconds()+Math.floor(Math.random() * 1000);
+  const uid = () => new Date().getMilliseconds()+Math.floor(Math.random() * 1000);
 
 	// add fps stats
 	if (FPS_STATS) {
@@ -148,7 +165,7 @@
 	const material = new THREE.MeshPhongMaterial( {
 		displacementMap: displacementMap,
 		displacementScale: 0, // 0.5
-		displacementBias: -0.5,
+		displacementBias: 0,
 		map: texture
 	} );
 
@@ -210,14 +227,15 @@
           y: vec.y,
           z: vec.z
         },
-        name: name
+        name: name,
+        teacher: true
       });
 
       writeMarkerData({
         x: vec.x,
         y: vec.y,
         z: vec.z
-      }, name, uid);
+      }, name, uid(), true);
     }
   }
 
@@ -227,8 +245,6 @@
 
   function getAllMarkerData () {
     firebase.database().ref('/markers').once('value').then(function(snapshot) {
-      const oldMarkers = [];
-
       for( var i = scene.children.length - 1; i >= 0;) {
         if (scene.children[i] && scene.children[i].geometry && (scene.children[i].geometry.constructor.name === 'CylinderGeometry' ||
           scene.children[i].geometry.constructor.name === 'TextGeometry')) {
@@ -237,37 +253,68 @@
         i--;
       }
 
+      const teacherPositions = [];
+
       for (let id in snapshot.val()) {
-        placeMarker(snapshot.val()[id]);
+        if (snapshot.val()[id].teacher) {
+          teacherPositions.push(snapshot.val()[id].position);
+        }
       }
+
+      let listHtml = '';
+
+      for (let id in snapshot.val()) {
+        const valid = isNearGoal(snapshot.val()[id].position, teacherPositions);
+
+        placeMarker(snapshot.val()[id], valid);
+        listHtml += `<li>${snapshot.val()[id].name}${valid ? '✓' : '✕'}</li>`
+      }
+
+      document.getElementById('nameList').innerHTML = listHtml;
     });
+  }
+
+  function isNearGoal (position, teacherPositions) {
+    for (let teacherPos of teacherPositions) {
+      const distance = Math.sqrt(Math.pow(teacherPos.x - position.x, 2) + Math.pow(teacherPos.y - position.y, 2));
+
+      console.log(distance);
+      if (distance < MAX_RADIUS) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   // write marker to database
-  function writeMarkerData (position, name, uid) {
+  function writeMarkerData (position, name, uid, teacher) {
     firebase.database().ref('markers/' + uid).set({
       position: position,
-      name: name
+      name: name,
+      teacher: teacher
     });
   }
 
-  function placeMarker (marker) {
+  function placeMarker (marker, valid) {
     const vec = marker.position;
     const name = marker.name;
 
+    let color;
+    if (marker.teacher) {
+      color = 0x2222aa;
+    } else {
+      color = valid ? 0x22aa22 : 0xaa2222;
+    }
+
     const colorMat	= new THREE.MeshBasicMaterial({
-      color: new THREE.Color( 0x000000 ),
+      color: new THREE.Color( color ),
       side: THREE.DoubleSide
     });
 
     const outlineMat = new THREE.MeshBasicMaterial({
-      color: new THREE.Color( 0xffffff ),
+      color: new THREE.Color( 0x000000 ),
       side: THREE.BackSide
-    });
-
-    const textMat	= new THREE.MeshBasicMaterial({
-      color: new THREE.Color( 0xffffff ),
-      side: THREE.DoubleSide
     });
 
     const cylGeo	= new THREE.CylinderGeometry(0.05, 0.005, 0.25, 12);
@@ -283,25 +330,6 @@
     outlineCylMesh.position.z	= vec.z;
     outlineCylMesh.scale.multiplyScalar(1.05);
     scene.add( outlineCylMesh );
-
-    const loader = new THREE.FontLoader();
-
-    loader.load('../assets/helvetiker_bold.typeface.json', function (font) {
-      const size = 0.05;
-
-      const nameGeometry = new THREE.TextGeometry(name, {
-        font: font,
-        size: size,
-        height: 0.001,
-        curveSegments: 12
-      });
-
-      const colorMesh = new THREE.Mesh(nameGeometry, textMat);
-      colorMesh.position.x = vec.x;
-      colorMesh.position.y = cylGeo.parameters.height + cylGeo.parameters.height / 2;
-      colorMesh.position.z = vec.z;
-      scene.add(colorMesh);
-    });
   }
 
 </script></body>
