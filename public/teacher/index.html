@@ -54,9 +54,12 @@
   }
 </style>
 
+
+
+
 <body>
   <div class="headerBar">
-    <h3>Question:</h3>
+    <span>⁉️Question⁉️</span>
     <input type="text" id="questionInput" />
     <button onclick="clearMarkers()">Clear Markers</button>
   </div>
@@ -69,8 +72,8 @@
 
 <script>
 	const FPS_STATS = false; // enable/disable fps counter on top
-	const STATIC_IMAGE = false; // enable for debug (no webcam)
-	const IMAGE = 'pollen.jpg'; // name of the image (in assets/)
+	const STATIC_IMAGE = true; // enable for debug (no webcam)
+	const IMAGE = 'grumpy.jpg'; // name of the image (in assets/)
 
 	const MAX_RADIUS = 0.5; // maximum radius to be away from the teacher points
 	//////////////////////////////////////////////////////////////////////////////////
@@ -264,7 +267,11 @@
   function getAllMarkerData () {
     firebase.database().ref('/markers').once('value').then(function(snapshot) {
 
-
+      for (var i = scene.children.length - 1; i >= 0; i--) {
+        if (scene.children[i] && scene.children[i].geometry && scene.children[i].geometry.constructor.name === 'CylinderGeometry') {
+          scene.remove(scene.children[i]);
+        }
+    }
       const teacherPositions = [];
       const teacherIds = [];
 
@@ -292,7 +299,6 @@
     for (let teacherPos of teacherPositions) {
       const distance = Math.sqrt(Math.pow(teacherPos.x - position.x, 2) + Math.pow(teacherPos.z - position.z, 2));
 
-      console.log(distance);
       if (distance < MAX_RADIUS) {
         return true;
       }
@@ -337,7 +343,10 @@
 
   // get text from input and write to db
   document.getElementById('questionInput').addEventListener('keyup', writeQuestionData);
-
+  firebase.database().ref('question/')
+    .once('value', snapshot => {
+      document.getElementById('questionInput').value = snapshot.val();
+    });
   function writeQuestionData () {
     const questionInput = document.getElementById('questionInput');
     const question = questionInput.value;
