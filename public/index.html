@@ -12,14 +12,13 @@
 <body style='margin : 0px; overflow: hidden; font-family: Monospace;'><div style='position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
 
 <script>
-
-
+	const FPS_STATS = true; // enable/disable fps counter on top
 	//////////////////////////////////////////////////////////////////////////////////
 	//		Init
 	//////////////////////////////////////////////////////////////////////////////////
 	// init renderer
-	var renderer	= new THREE.WebGLRenderer({
-		antialias	: true,
+	const renderer	= new THREE.WebGLRenderer({
+		antialias	: false,
 		alpha: true
 	});
 	renderer.setClearColor(new THREE.Color('lightgrey'), 0)
@@ -29,26 +28,28 @@
 	renderer.domElement.style.left = '0px'
 	document.body.appendChild( renderer.domElement );
 	// array of functions for the rendering loop
-	var onRenderFcts= [];
+	const onRenderFcts= [];
 	// init scene and camera
-	var scene	= new THREE.Scene();
+	const scene	= new THREE.Scene();
 	
-	var stats = new Stats();
-	console.log(stats.dom)
-	document.body.appendChild( stats.domElement );
-	onRenderFcts.push(() => {
-		stats.update();
-	})
+	// add fps stats
+	if (FPS_STATS) {
+		const stats = new Stats();
+		document.body.appendChild( stats.domElement );
+		onRenderFcts.push(() => {
+			stats.update();
+		});
+	}
 	//////////////////////////////////////////////////////////////////////////////////
 	//		Initialize a basic camera
 	//////////////////////////////////////////////////////////////////////////////////
 	// Create a camera
-	var camera = new THREE.Camera();
+	const camera = new THREE.Camera();
 	scene.add(camera);
 	////////////////////////////////////////////////////////////////////////////////
 	//          handle arToolkitSource
 	////////////////////////////////////////////////////////////////////////////////
-	var arToolkitSource = new THREEx.ArToolkitSource({
+	const arToolkitSource = new THREEx.ArToolkitSource({
 		// to read from the webcam 
 		sourceType : 'webcam',
 	})
@@ -67,7 +68,7 @@
 	////////////////////////////////////////////////////////////////////////////////
 	
 	// create atToolkitContext
-	var arToolkitContext = new THREEx.ArToolkitContext({
+	const arToolkitContext = new THREEx.ArToolkitContext({
 		cameraParametersUrl: 'lib/camera_para.dat',
 		detectionMode: 'mono',
 	})
@@ -86,7 +87,7 @@
 	})
 		
 	////////////////////////////////////////////////////////////////////////////////
-	var markerControls = new THREEx.ArMarkerControls(arToolkitContext, camera, {
+	const markerControls = new THREEx.ArMarkerControls(arToolkitContext, camera, {
 		type : 'pattern',
 		patternUrl : 'markers/hiro.pat',
 		changeMatrixMode: 'cameraTransformMatrix'
@@ -98,23 +99,23 @@
 	//////////////////////////////////////////////////////////////////////////////////
 	// add a torus knot	
 	
-	var geometry	= new THREE.PlaneGeometry(2, 2, 100, 100);
-	var textureLoader = new THREE.TextureLoader();
-	var displacementMap = textureLoader.load("image_bw.jpg");
-	var texture = textureLoader.load("grumpy.jpg");
+	const geometry	= new THREE.PlaneGeometry(2, 2, 100, 100);
+	const textureLoader = new THREE.TextureLoader();
+	const displacementMap = textureLoader.load("image_bw.jpg");
+	const texture = textureLoader.load("grumpy.jpg");
 
-	var material = new THREE.MeshPhongMaterial( {
+	const material = new THREE.MeshPhongMaterial( {
 		displacementMap: displacementMap,
 		displacementScale: 0, // 0.1
 		displacementBias: 0, // from original model
 		map: texture
 	} );
 
-	var plane = new THREE.Mesh( geometry, material);
+	const plane = new THREE.Mesh( geometry, material);
 	plane.rotation.x = Math.PI*1.5
 	scene.add( plane );
 
-	var light = new THREE.AmbientLight( 0xffffff ); // soft white light
+	const light = new THREE.AmbientLight( 0xffffff ); // soft white light
 	scene.add( light );
 	//////////////////////////////////////////////////////////////////////////////////
 	//		render the whole thing on the page
@@ -124,13 +125,13 @@
 		renderer.render( scene, camera );
 	})
 	// run the rendering loop
-	var lastTimeMsec= null
+	let lastTimeMsec= null
 	requestAnimationFrame(function animate(nowMsec){
 		// keep looping
 		requestAnimationFrame( animate );
 		// measure time
 		lastTimeMsec	= lastTimeMsec || nowMsec-1000/60
-		var deltaMsec	= Math.min(200, nowMsec - lastTimeMsec)
+		const deltaMsec	= Math.min(200, nowMsec - lastTimeMsec)
 		lastTimeMsec	= nowMsec
 		// call each update function
 		onRenderFcts.forEach(function(onRenderFct){
@@ -140,13 +141,13 @@
 
 
 	// Apply VR stereo rendering to renderer.
-	var vrEffect = null
+	let vrEffect = null
 	if( true ){
 		vrEffect = new THREE.VREffect(renderer);
 		vrEffect.setSize(window.innerWidth, window.innerHeight);
 	}
 	// Get the VRDisplay and save it for later.
-	var vrDisplay = null;
+	let vrDisplay = null;
 	navigator.getVRDisplays().then(function(displays){
 		if (displays.length > 0) {
 			vrDisplay = displays[0];
