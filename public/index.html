@@ -198,7 +198,7 @@
 
       const loader = new THREE.FontLoader();
 
-      loader.load( './vendor/three.js/examples/fonts/helvetiker_bold.typeface.json', function ( font ) {
+      loader.load( '../assets/helvetiker_bold.typeface.json', function ( font ) {
 
         const size = 0.05;
 
@@ -273,7 +273,9 @@
 			camera.updateProjectionMatrix();			
 		}
 	}
-	document.body.addEventListener('click', function(event) {
+
+
+	/*document.body.addEventListener('click', function(event) {
 		togglePresent()
-	})
+	})*/
 </script></body>
