@@ -28,6 +28,8 @@
 
 <script>
 	const FPS_STATS = true; // enable/disable fps counter on top
+	const IMAGE = 'grumpy.jpg'; // name of the image (in assets/)
+	const image_path = 'assets/' + IMAGE;
 	//////////////////////////////////////////////////////////////////////////////////
 	//		Init
 	//////////////////////////////////////////////////////////////////////////////////
@@ -88,7 +90,9 @@
 	////////////////////////////////////////////////////////////////////////////////
 	const arToolkitSource = new THREEx.ArToolkitSource({
 		// to read from the webcam 
-		sourceType : 'webcam'
+		//sourceType : 'webcam'
+		sourceType : 'image',
+		sourceUrl : 'assets/hiro_screenshot.png',
 	});
 	arToolkitSource.init(function onReady(){
 		// handle resize of renderer
@@ -136,15 +140,15 @@
 	//////////////////////////////////////////////////////////////////////////////////
 	// add a torus knot	
 	
-	const geometry	= new THREE.PlaneGeometry(5, 5, 1, 100);
+	const geometry	= new THREE.PlaneGeometry(5, 5, 100, 100);
 	const textureLoader = new THREE.TextureLoader();
-	const displacementMap = textureLoader.load("./assets/image_bw.jpg");
-	const texture = textureLoader.load("./assets/grumpy.jpg");
+	const displacementMap = textureLoader.load(image_path);
+	const texture = textureLoader.load(image_path);
 
 	const material = new THREE.MeshPhongMaterial( {
 		displacementMap: displacementMap,
-		displacementScale: 0, // 0.1
-		displacementBias: 0, // from original model
+		displacementScale: 0, // 0.5
+		displacementBias: -0.5,
 		map: texture
 	} );
 
