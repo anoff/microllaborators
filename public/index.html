@@ -36,7 +36,9 @@
 	// required for raytracing
   const mouse = { x:0, y:0 };
   const names = ['Tim', 'Max', 'Tom', 'Kai', 'Sam', 'Jay', 'Guy', 'Jim'];
+  const name = names[Math.floor(Math.random() * names.length)];
   const removeDelay = 10000;
+  const uid = new Date().getMilliseconds()+Math.floor(Math.random() * 1000);
 
 	// add fps stats
 	if (FPS_STATS) {
@@ -59,9 +61,7 @@
   firebase.initializeApp(config);
 
   // Get all markers and place them
-  getAllMarkerData().then((snapshot) => {
-    console.log(snapshot.val());
-  });
+  getAllMarkerData();
 
 	//////////////////////////////////////////////////////////////////////////////////
 	//		Initialize a basic camera
@@ -185,6 +185,48 @@
     const raycaster = getRayCaster();
     const vec = raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0)));
 
+    if (vec) {
+      const meshes = placeMarker({
+        position: {
+          x: vec.x,
+          y: vec.y,
+          z: vec.z
+        },
+        name: name
+      });
+
+      writeMarkerData({
+        x: vec.x,
+        y: vec.y,
+        z: vec.z
+      }, name, uid);
+    }
+  }
+
+  setInterval(() => {
+    getAllMarkerData();
+  }, 1000);
+
+  function getAllMarkerData () {
+    firebase.database().ref('/markers').once('value').then(function(snapshot) {
+      for (let id in snapshot.val()) {
+        placeMarker(snapshot.val()[id]);
+      }
+    });
+  }
+
+  // write marker to database
+  function writeMarkerData (position, name, uid) {
+    firebase.database().ref('markers/' + uid).set({
+      position: position,
+      name: name
+    });
+  }
+
+  function placeMarker (marker) {
+    const vec = marker.position;
+    const name = marker.name;
+
     const colorMat	= new THREE.MeshBasicMaterial({
       color: new THREE.Color( 0x000000 ),
       side: THREE.DoubleSide
@@ -200,81 +242,44 @@
       side: THREE.DoubleSide
     });
 
-    if (vec) {
-      const uid = new Date().getMilliseconds()+Math.floor(Math.random()*1000);
+    const cylGeo	= new THREE.CylinderGeometry(0.05, 0.005, 0.25, 12);
+    const colorCylMesh	= new THREE.Mesh( cylGeo, colorMat );
+    colorCylMesh.position.x	= vec.x + cylGeo.parameters.radiusTop;
+    colorCylMesh.position.y	= cylGeo.parameters.height / 2;
+    colorCylMesh.position.z	= vec.z;
+    scene.add( colorCylMesh );
 
-      const cylGeo	= new THREE.CylinderGeometry(0.05, 0.005, 0.25, 12);
-      const colorCylMesh	= new THREE.Mesh( cylGeo, colorMat );
-      colorCylMesh.position.x	= vec.x + cylGeo.parameters.radiusTop;
-      colorCylMesh.position.y	= cylGeo.parameters.height / 2;
-      colorCylMesh.position.z	= vec.z;
-      scene.add( colorCylMesh );
+    const outlineCylMesh	= new THREE.Mesh( cylGeo, outlineMat );
+    outlineCylMesh.position.x	= vec.x + cylGeo.parameters.radiusTop;
+    outlineCylMesh.position.y	= cylGeo.parameters.height / 2;
+    outlineCylMesh.position.z	= vec.z;
+    outlineCylMesh.scale.multiplyScalar(1.05);
+    scene.add( outlineCylMesh );
 
-      const outlineCylMesh	= new THREE.Mesh( cylGeo, outlineMat );
-      outlineCylMesh.position.x	= vec.x + cylGeo.parameters.radiusTop;
-      outlineCylMesh.position.y	= cylGeo.parameters.height / 2;
-      outlineCylMesh.position.z	= vec.z;
-      outlineCylMesh.scale.multiplyScalar(1.05);
-      scene.add( outlineCylMesh );
+    const loader = new THREE.FontLoader();
 
-      const loader = new THREE.FontLoader();
+    loader.load('../assets/helvetiker_bold.typeface.json', function (font) {
+      const size = 0.05;
 
-      loader.load( '../assets/helvetiker_bold.typeface.json', function ( font ) {
-
-        const size = 0.05;
-
-        const currName = names[Math.floor(Math.random() * names.length)];
-        const nameGeometry = new THREE.TextGeometry(currName, {
-          font: font,
-          size: size,
-          height: 0.001,
-          curveSegments: 12
-        });
-
-        const colorMesh	= new THREE.Mesh( nameGeometry, textMat );
-        colorMesh.position.x	= vec.x;
-        colorMesh.position.y	= cylGeo.parameters.height + cylGeo.parameters.height / 2;
-        colorMesh.position.z	= vec.z;
-        scene.add( colorMesh );
-
-        const backdropGeometry = new THREE.PlaneGeometry(0.15, 0.1, 1);
-        const backdropMesh = new THREE.Mesh(backdropGeometry, colorMat);
-        backdropMesh.position.x	= vec.x + backdropGeometry.parameters.width / 2.4;
-        backdropMesh.position.y	= cylGeo.parameters.height + backdropGeometry.parameters.height * 1.5;
-        backdropMesh.position.z	= vec.z - 0.01;
-        scene.add(backdropMesh);
-
-        writeMarkerData({ x: vec.x, y: vec.y, z: vec.z }, currName, uid);
-
-        setTimeout(() => {
-          scene.remove(colorCylMesh);
-          scene.remove(outlineCylMesh);
-          scene.remove(colorMesh);
-          scene.remove(backdropMesh);
-
-          removeMarkerData(uid);
-        }, removeDelay);
+      const nameGeometry = new THREE.TextGeometry(name, {
+        font: font,
+        size: size,
+        height: 0.001,
+        curveSegments: 12
       });
-    }
-  }
 
-  function getAllMarkerData () {
-    return new Promise((resolve, reject) => {
-        firebase.database().ref('/markers').once('value').then(function(snapshot) {
-          resolve(snapshot);
-        });
-    });
-  }
+      const colorMesh = new THREE.Mesh(nameGeometry, textMat);
+      colorMesh.position.x = vec.x;
+      colorMesh.position.y = cylGeo.parameters.height + cylGeo.parameters.height / 2;
+      colorMesh.position.z = vec.z;
+      scene.add(colorMesh);
 
-  function removeMarkerData (uid) {
-    firebase.database().ref('markers/' + uid).set(null);
-  }
-
-  // write marker to database
-  function writeMarkerData (position, name, uid) {
-    firebase.database().ref('markers/' + uid).set({
-      position: position,
-      name: name
+      const backdropGeometry = new THREE.PlaneGeometry(0.15, 0.1, 1);
+      const backdropMesh = new THREE.Mesh(backdropGeometry, colorMat);
+      backdropMesh.position.x = vec.x + backdropGeometry.parameters.width / 2.4;
+      backdropMesh.position.y = cylGeo.parameters.height + backdropGeometry.parameters.height * 1.5;
+      backdropMesh.position.z = vec.z - 0.01;
+      scene.add(backdropMesh);
     });
   }
 
