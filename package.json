@@ -4,12 +4,13 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon server"
+    "start": "nodemon server",
+    "publish": "surge --domain https://zeisshack.surge.sh --project public"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/anoff/zeisshack.git"
-  },
+  },u
   "authors": [
     "Tim Grossmann <https://github.com/timgrossmann>",
     "Andreas Offenhaeuser <http://anoff.io>"
