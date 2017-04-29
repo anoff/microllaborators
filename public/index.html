@@ -157,20 +157,28 @@
 	// add a torus knot	
 	
 	const geometry	= new THREE.PlaneGeometry(5, 5, 100, 100);
-	const textureLoader = new THREE.TextureLoader();
-	const displacementMap = textureLoader.load('assets/' + IMAGE);
-	const texture = textureLoader.load('assets/' + IMAGE);
 
-	const material = new THREE.MeshPhongMaterial( {
-		displacementMap: displacementMap,
-		displacementScale: 0.5, // 0.5
-		displacementBias: -1,
-		map: texture
-	} );
+	firebase.database().ref('image')
+		.on('value', snapshot => {
+			const filename = 'assets/' + snapshot.val();
+			initImagePlane(filename);
+		});
 
-	const plane = new THREE.Mesh( geometry, material);
-	plane.rotation.x = Math.PI*1.5;
-	scene.add( plane );
+	function initImagePlane(filename) {
+		const textureLoader = new THREE.TextureLoader();
+		const displacementMap = textureLoader.load(filename);
+		const texture = textureLoader.load(filename);
+		const materialOptions = {
+			displacementMap: displacementMap,
+			displacementScale: 0.5, // 0.5
+			displacementBias: -1,
+			map: texture
+		};
+		const material = new THREE.MeshPhongMaterial(materialOptions);
+		const plane = new THREE.Mesh(geometry, material);
+		plane.rotation.x = Math.PI*1.5;
+		scene.add(plane);
+	}
 
 	const light = new THREE.AmbientLight( 0xffffff ); // add light because standardMesh doesnt work in the dark
 	scene.add( light );
