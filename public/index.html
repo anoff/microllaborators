@@ -8,6 +8,7 @@
 <script src="lib/VRcontrols.js"></script>
 <script src="lib/webvr-polyfill.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.9.0/firebase.js"></script>
 
 <body style='margin : 0px; overflow: hidden; font-family: Monospace;'><div style='position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
 
@@ -45,6 +46,23 @@
 			stats.update();
 		});
 	}
+
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyBjCuNgKFQI5zOvusmt3wrB8cWoKd9e_eI",
+    authDomain: "zeisshack-8500b.firebaseapp.com",
+    databaseURL: "https://zeisshack-8500b.firebaseio.com",
+    projectId: "zeisshack-8500b",
+    storageBucket: "zeisshack-8500b.appspot.com",
+    messagingSenderId: "580810798803"
+  };
+  firebase.initializeApp(config);
+
+  // Get all markers and place them
+  getAllMarkerData().then((snapshot) => {
+    console.log(snapshot.val());
+  });
+
 	//////////////////////////////////////////////////////////////////////////////////
 	//		Initialize a basic camera
 	//////////////////////////////////////////////////////////////////////////////////
@@ -183,6 +201,8 @@
     });
 
     if (vec) {
+      const uid = new Date().getMilliseconds()+Math.floor(Math.random()*1000);
+
       const cylGeo	= new THREE.CylinderGeometry(0.05, 0.005, 0.25, 12);
       const colorCylMesh	= new THREE.Mesh( cylGeo, colorMat );
       colorCylMesh.position.x	= vec.x + cylGeo.parameters.radiusTop;
@@ -203,7 +223,8 @@
 
         const size = 0.05;
 
-        const nameGeometry = new THREE.TextGeometry(names[Math.floor(Math.random() * names.length)], {
+        const currName = names[Math.floor(Math.random() * names.length)];
+        const nameGeometry = new THREE.TextGeometry(currName, {
           font: font,
           size: size,
           height: 0.001,
@@ -218,19 +239,43 @@
 
         const backdropGeometry = new THREE.PlaneGeometry(0.15, 0.1, 1);
         const backdropMesh = new THREE.Mesh(backdropGeometry, colorMat);
-        backdropMesh.position.x	= vec.x + backdropGeometry.parameters.width / 2.5;
+        backdropMesh.position.x	= vec.x + backdropGeometry.parameters.width / 2.4;
         backdropMesh.position.y	= cylGeo.parameters.height + backdropGeometry.parameters.height * 1.5;
         backdropMesh.position.z	= vec.z - 0.01;
         scene.add(backdropMesh);
+
+        writeMarkerData({ x: vec.x, y: vec.y, z: vec.z }, currName, uid);
 
         setTimeout(() => {
           scene.remove(colorCylMesh);
           scene.remove(outlineCylMesh);
           scene.remove(colorMesh);
           scene.remove(backdropMesh);
+
+          removeMarkerData(uid);
         }, removeDelay);
       });
-
     }
   }
+
+  function getAllMarkerData () {
+    return new Promise((resolve, reject) => {
+        firebase.database().ref('/markers').once('value').then(function(snapshot) {
+          resolve(snapshot);
+        });
+    });
+  }
+
+  function removeMarkerData (uid) {
+    firebase.database().ref('markers/' + uid).set(null);
+  }
+
+  // write marker to database
+  function writeMarkerData (position, name, uid) {
+    firebase.database().ref('markers/' + uid).set({
+      position: position,
+      name: name
+    });
+  }
+
 </script></body>
