@@ -154,6 +154,8 @@
 		}
 	});
 	window.addEventListener('vrdisplaypresentchange', function onVRDisplayPresentChange() {
+		console.log('WEEEEE')
+		console.log(onResize)
 		onResize();
 	});
 	
@@ -166,6 +168,23 @@
 			vrDisplay.exitPresent()
 		} else {
 			vrDisplay.requestPresent([{source: renderer.domElement}]);
+		}
+	}
+	function onResize() {
+		// handle arToolkitSource resize
+		arToolkitSource.onResize(renderer.domElement)		
+		
+		// get width/height from arToolkitSource.domElement
+		var elementWidth = parseFloat( arToolkitSource.domElement.style.width.replace(/px$/,''), 10 )
+		var elementHeight = parseFloat( arToolkitSource.domElement.style.height.replace(/px$/,''), 10 )
+		
+		if( vrEffect !== null ){
+			vrEffect.setSize(elementWidth, elementHeight);
+		}
+		
+		if( camera instanceof THREE.PerspectiveCamera === true ){
+			camera.aspect = elementWidth / elementHeight;
+			camera.updateProjectionMatrix();			
 		}
 	}
 	document.body.addEventListener('click', function(event) {
