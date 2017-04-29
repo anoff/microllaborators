@@ -259,6 +259,12 @@
 
   function getAllMarkerData () {
     firebase.database().ref('/markers').once('value').then(function(snapshot) {
+
+      for (var i = scene.children.length - 1; i >= 0; i--) {
+        if (scene.children[i] && scene.children[i].geometry && scene.children[i].geometry.constructor.name === 'CylinderGeometry') {
+          scene.remove(scene.children[i]);
+        }
+    }
       const teacherPositions = [];
       const teacherIds = [];
 
@@ -286,7 +292,6 @@
     for (let teacherPos of teacherPositions) {
       const distance = Math.sqrt(Math.pow(teacherPos.x - position.x, 2) + Math.pow(teacherPos.z - position.z, 2));
 
-      console.log(distance);
       if (distance < MAX_RADIUS) {
         return true;
       }
@@ -331,7 +336,10 @@
 
   // get text from input and write to db
   document.getElementById('questionInput').addEventListener('keyup', writeQuestionData);
-
+  firebase.database().ref('question/')
+    .once('value', snapshot => {
+      document.getElementById('questionInput').value = snapshot.val();
+    });
   function writeQuestionData () {
     const questionInput = document.getElementById('questionInput');
     const question = questionInput.value;
