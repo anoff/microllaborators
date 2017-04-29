@@ -23,6 +23,7 @@
     display: flex;
     align-content: space-around;
     justify-content: space-around;
+    background-color: rgba(255, 255, 255, 0.7);
   }
 
   #questionInput {
@@ -32,19 +33,24 @@
   }
 
   .rightBar {
-    background-color: rgba(255, 255, 255, 0.6);
+    background-color: rgba(255, 255, 255, 0.7);
     position: absolute;
     left: 93%;
     width: 7%;
-    height: 500px;
+    height: 1000px;
     margin: 0;
     padding-top: 10px;
+    top: 50px;
     text-align: center;
     font-size: 1.2em;
   }
 
   .header li {
     list-style-type: none;
+  }
+
+  h3 {
+    margin: 12px;
   }
 </style>
 
@@ -90,7 +96,7 @@
 
 	// required for raytracing
   const mouse = { x:0, y:0 };
-  const names = ['Tim', 'Max', 'Tom', 'Kai', 'Sam', 'Jay', 'Guy', 'Jim'];
+  const names = ['Tim', 'Max', 'Tom', 'Kai', 'Sam', 'Jay', 'Guy', 'Jim', 'Andres', 'Steffen', 'Samy', 'Franzi', 'Lola', 'Anna'];
   const name = names[Math.floor(Math.random() * names.length)];
   const removeDelay = 10000;
   const uid = () => new Date().getMilliseconds()+Math.floor(Math.random() * 1000);
