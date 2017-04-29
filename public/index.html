@@ -20,8 +20,8 @@
   .header {
     background-color: rgba(255, 255, 255, 0.6);
     position: absolute;
-    left: 90%;
-    width: 10%;
+    left: 93%;
+    width: 7%;
     height: 500px;
     margin: 0;
     padding-top: 10px;
@@ -46,7 +46,7 @@
 	const STATIC_IMAGE = false; // enable for debug (no webcam)
 	const IMAGE = 'transistor.jpg'; // name of the image (in assets/)
 
-	const MAX_RADIUS = 0.1; // maximum radius to be away from the teacher points
+	const MAX_RADIUS = 0.5; // maximum radius to be away from the teacher points
 	//////////////////////////////////////////////////////////////////////////////////
 	//		Init
 	//////////////////////////////////////////////////////////////////////////////////
@@ -265,7 +265,7 @@
 
   function isNearGoal (position, teacherPositions) {
     for (let teacherPos of teacherPositions) {
-      const distance = Math.sqrt(Math.pow(teacherPos.x - position.x, 2) + Math.pow(teacherPos.y - position.y, 2));
+      const distance = Math.sqrt(Math.pow(teacherPos.x - position.x, 2) + Math.pow(teacherPos.z - position.z, 2));
 
       console.log(distance);
       if (distance < MAX_RADIUS) {
