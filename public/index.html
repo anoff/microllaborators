@@ -205,10 +205,20 @@
 
   setInterval(() => {
     getAllMarkerData();
-  }, 1000);
+  }, 500);
 
   function getAllMarkerData () {
     firebase.database().ref('/markers').once('value').then(function(snapshot) {
+      const oldMarkers = [];
+
+      for( var i = scene.children.length - 1; i >= 0;) {
+        if (scene.children[i] && scene.children[i].geometry && (scene.children[i].geometry.constructor.name === 'CylinderGeometry' ||
+          scene.children[i].geometry.constructor.name === 'TextGeometry')) {
+          scene.remove(scene.children[i]);
+        }
+        i--;
+      }
+
       for (let id in snapshot.val()) {
         placeMarker(snapshot.val()[id]);
       }
@@ -273,13 +283,6 @@
       colorMesh.position.y = cylGeo.parameters.height + cylGeo.parameters.height / 2;
       colorMesh.position.z = vec.z;
       scene.add(colorMesh);
-
-      const backdropGeometry = new THREE.PlaneGeometry(0.15, 0.1, 1);
-      const backdropMesh = new THREE.Mesh(backdropGeometry, colorMat);
-      backdropMesh.position.x = vec.x + backdropGeometry.parameters.width / 2.4;
-      backdropMesh.position.y = cylGeo.parameters.height + backdropGeometry.parameters.height * 1.5;
-      backdropMesh.position.z = vec.z - 0.01;
-      scene.add(backdropMesh);
     });
   }
 
