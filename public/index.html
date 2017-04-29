@@ -4,10 +4,16 @@
 <script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/85/three.js'></script>
 <!-- ar.js -->
 <script src="lib/ar.js"></script>
+<script src="lib/VReffect.js"></script>
+<script src="lib/VRcontrols.js"></script>
+<script src="lib/webvr-polyfill.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
 
 <body style='margin : 0px; overflow: hidden; font-family: Monospace;'><div style='position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
 
 <script>
+
+
 	//////////////////////////////////////////////////////////////////////////////////
 	//		Init
 	//////////////////////////////////////////////////////////////////////////////////
@@ -26,7 +32,13 @@
 	var onRenderFcts= [];
 	// init scene and camera
 	var scene	= new THREE.Scene();
-		
+	
+	var stats = new Stats();
+	console.log(stats.dom)
+	document.body.appendChild( stats.domElement );
+	onRenderFcts.push(() => {
+		stats.update();
+	})
 	//////////////////////////////////////////////////////////////////////////////////
 	//		Initialize a basic camera
 	//////////////////////////////////////////////////////////////////////////////////
@@ -39,13 +51,6 @@
 	var arToolkitSource = new THREEx.ArToolkitSource({
 		// to read from the webcam 
 		sourceType : 'webcam',
-		
-		// // to read from an image
-		// sourceType : 'image',
-		// sourceUrl : '../../data/images/img.jpg',		
-		// to read from a video
-		// sourceType : 'video',
-		// sourceUrl : '../../data/videos/headtracking.mp4',		
 	})
 	arToolkitSource.init(function onReady(){
 		// handle resize of renderer
@@ -81,15 +86,9 @@
 	})
 		
 	////////////////////////////////////////////////////////////////////////////////
-	//          Create a ArMarkerControls
-	////////////////////////////////////////////////////////////////////////////////
-	
-	// init controls for camera
 	var markerControls = new THREEx.ArMarkerControls(arToolkitContext, camera, {
 		type : 'pattern',
 		patternUrl : 'markers/hiro.pat',
-		// patternUrl : '../../data/data/patt.kanji',
-		// as we controls the camera, set changeMatrixMode: 'cameraTransformMatrix'
 		changeMatrixMode: 'cameraTransformMatrix'
 	})
 	// as we do changeMatrixMode: 'cameraTransformMatrix', start with invisible scene
@@ -99,14 +98,14 @@
 	//////////////////////////////////////////////////////////////////////////////////
 	// add a torus knot	
 	
-	var geometry	= new THREE.PlaneGeometry(1, 1, 80, 60);
+	var geometry	= new THREE.PlaneGeometry(2, 2, 100, 100);
 	var textureLoader = new THREE.TextureLoader();
-	var displacementMap = textureLoader.load( "image_bw_800x600.jpg" );
-	var texture = textureLoader.load("image.jpg");
+	var displacementMap = textureLoader.load("image_bw.jpg");
+	var texture = textureLoader.load("grumpy.jpg");
 
 	var material = new THREE.MeshPhongMaterial( {
 		displacementMap: displacementMap,
-		displacementScale: 0.1,
+		displacementScale: 0, // 0.1
 		displacementBias: 0, // from original model
 		map: texture
 	} );
@@ -137,5 +136,41 @@
 		onRenderFcts.forEach(function(onRenderFct){
 			onRenderFct(deltaMsec/1000, nowMsec/1000)
 		})
+	})
+
+
+	// Apply VR stereo rendering to renderer.
+	var vrEffect = null
+	if( true ){
+		vrEffect = new THREE.VREffect(renderer);
+		vrEffect.setSize(window.innerWidth, window.innerHeight);
+	}
+	// Get the VRDisplay and save it for later.
+	var vrDisplay = null;
+	navigator.getVRDisplays().then(function(displays){
+		if (displays.length > 0) {
+			vrDisplay = displays[0];
+		}
+	});
+	window.addEventListener('vrdisplaypresentchange', function onVRDisplayPresentChange() {
+		onResize();
+	});
+	
+	function togglePresent(){
+		if( vrDisplay.capabilities.canPresent === false ){
+			alert('You vr display can not present!')
+			return
+		}
+		if( vrDisplay.isPresenting ){
+			vrDisplay.exitPresent()
+		}else{
+			vrDisplay.requestPresent([{source: renderer.domElement}]);
+		}
+	}
+	document.body.addEventListener('keypress', function(event){
+		if( event.key === 'p' )	togglePresent()
+	})
+	document.body.addEventListener('click', function(event){
+		togglePresent()
 	})
 </script></body>
