@@ -42,9 +42,9 @@
   </div>
 
 <script>
-	const FPS_STATS = false; // enable/disable fps counter on top
-	const IMAGE = 'grumpy.jpg'; // name of the image (in assets/)
-	const image_path = 'assets/' + IMAGE;
+	const FPS_STATS = true; // enable/disable fps counter on top
+	const STATIC_IMAGE = false; // enable for debug (no webcam)
+	const IMAGE = 'transistor.jpg'; // name of the image (in assets/)
 
 	const MAX_RADIUS = 0.1; // maximum radius to be away from the teacher points
 	//////////////////////////////////////////////////////////////////////////////////
@@ -105,12 +105,14 @@
 	////////////////////////////////////////////////////////////////////////////////
 	//          handle arToolkitSource
 	////////////////////////////////////////////////////////////////////////////////
-	const arToolkitSource = new THREEx.ArToolkitSource({
-		// to read from the webcam 
-		//sourceType : 'webcam'
-		sourceType : 'image',
-		sourceUrl : 'assets/hiro_screenshot.png',
-	});
+	let arOptions = {
+		sourceType: 'webcam'
+	};
+	if (STATIC_IMAGE) {
+		arOptions.sourceType = 'image';
+		arOptions.sourceUrl = 'assets/hiro_screenshot.png';
+	}
+	const arToolkitSource = new THREEx.ArToolkitSource(arOptions);
 	arToolkitSource.init(function onReady(){
 		// handle resize of renderer
 		arToolkitSource.onResize(renderer.domElement)		
@@ -159,8 +161,8 @@
 	
 	const geometry	= new THREE.PlaneGeometry(5, 5, 100, 100);
 	const textureLoader = new THREE.TextureLoader();
-	const displacementMap = textureLoader.load(image_path);
-	const texture = textureLoader.load(image_path);
+	const displacementMap = textureLoader.load('assets/' + IMAGE);
+	const texture = textureLoader.load('assets/' + IMAGE);
 
 	const material = new THREE.MeshPhongMaterial( {
 		displacementMap: displacementMap,
@@ -183,26 +185,14 @@
 		renderer.render( scene, camera );
 	});
 	// run the rendering loop
-	let lastTimeMsec= null;
-	requestAnimationFrame(function animate(nowMsec){
-		// keep looping
-		requestAnimationFrame( animate );
-		// measure time
-		lastTimeMsec	= lastTimeMsec || nowMsec-1000/60;
-		const deltaMsec	= Math.min(200, nowMsec - lastTimeMsec);
-		lastTimeMsec	= nowMsec;
+	setInterval(() => requestAnimationFrame(animate), 50);
+	function animate(nowMsec){
 		// call each update function
-		onRenderFcts.forEach(function(onRenderFct){
-			onRenderFct(deltaMsec/1000, nowMsec/1000)
-		})
-	});
+		onRenderFcts.forEach(fn => fn())
+	}
 
   // place a marker on the plane
-  document.addEventListener("mousedown", onMouseDown);
-
-  function onMouseDown(event) {
-    handleClick();
-  }
+  document.addEventListener("mousedown", handleClick);
 
   function getRayCaster() {
     // normalized device coordinates
@@ -221,21 +211,20 @@
     const vec = raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0)));
 
     if (vec) {
-      const meshes = placeMarker({
+			const marker = {
         position: {
           x: vec.x,
           y: vec.y,
           z: vec.z
         },
-        name: name,
+        name,
+				uid: uid(),
         teacher: true
-      });
-
-      writeMarkerData({
-        x: vec.x,
-        y: vec.y,
-        z: vec.z
-      }, name, uid(), true);
+      };
+			// placemarker on scene
+      placeMarker(marker);
+			// update marker in database
+      writeMarkerData(marker);
     }
   }
 
@@ -288,12 +277,12 @@
   }
 
   // write marker to database
-  function writeMarkerData (position, name, uid, teacher) {
+  function writeMarkerData ({position, name, uid, teacher}) {
     firebase.database().ref('markers/' + uid).set({
       position: position,
       name: name,
-      teacher: teacher
-    });
+      teacher
+    }).then(() => console.log(`updated marker ${uid} to ${JSON.stringify(position)}`));
   }
 
   function placeMarker (marker, valid) {
@@ -312,11 +301,6 @@
       side: THREE.DoubleSide
     });
 
-    const outlineMat = new THREE.MeshBasicMaterial({
-      color: new THREE.Color( 0x000000 ),
-      side: THREE.BackSide
-    });
-
     const cylGeo	= new THREE.CylinderGeometry(0.05, 0.005, 0.25, 12);
     const colorCylMesh	= new THREE.Mesh( cylGeo, colorMat );
     colorCylMesh.position.x	= vec.x + cylGeo.parameters.radiusTop;
@@ -324,12 +308,6 @@
     colorCylMesh.position.z	= vec.z;
     scene.add( colorCylMesh );
 
-    const outlineCylMesh	= new THREE.Mesh( cylGeo, outlineMat );
-    outlineCylMesh.position.x	= vec.x + cylGeo.parameters.radiusTop;
-    outlineCylMesh.position.y	= cylGeo.parameters.height / 2;
-    outlineCylMesh.position.z	= vec.z;
-    outlineCylMesh.scale.multiplyScalar(1.05);
-    scene.add( outlineCylMesh );
   }
 
 </script></body>
