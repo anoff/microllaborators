@@ -42,9 +42,9 @@
   </div>
 
 <script>
-	const FPS_STATS = true; // enable/disable fps counter on top
-	const STATIC_IMAGE = false; // enable for debug (no webcam)
-	const IMAGE = 'transistor.jpg'; // name of the image (in assets/)
+	const FPS_STATS = false; // enable/disable fps counter on top
+	const STATIC_IMAGE = true; // enable for debug (no webcam)
+	const IMAGE = 'grumpy.jpg'; // name of the image (in assets/)
 
 	const MAX_RADIUS = 0.5; // maximum radius to be away from the teacher points
 	//////////////////////////////////////////////////////////////////////////////////
@@ -243,20 +243,23 @@
       }
 
       const teacherPositions = [];
+      const teacherIds = [];
 
       for (let id in snapshot.val()) {
         if (snapshot.val()[id].teacher) {
-          teacherPositions.push(snapshot.val()[id].position);
+          teacherPositions.push(snapshot.val()[id]);
+          teacherIds.push(id);
         }
       }
 
       let listHtml = '';
 
       for (let id in snapshot.val()) {
-        const valid = isNearGoal(snapshot.val()[id].position, teacherPositions);
+        const valid = isNearGoal(snapshot.val()[id].position, teacherPositions.map((teacherPos) => teacherPos.position));
 
         placeMarker(snapshot.val()[id], valid);
-        listHtml += `<li>${snapshot.val()[id].name}${valid ? '✓' : '✕'}</li>`
+
+        listHtml += teacherIds.indexOf(id) === -1 ? `<li>${snapshot.val()[id].name}${valid ? '✓' : '✕'}</li>` : '';
       }
 
       document.getElementById('nameList').innerHTML = listHtml;
