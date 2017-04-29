@@ -31,7 +31,11 @@
 	const onRenderFcts= [];
 	// init scene and camera
 	const scene	= new THREE.Scene();
-	
+
+	// required for raytracing
+  const mouse = { x:0, y:0 };
+  const names = ['Tim', 'Max', 'Tom', 'Kai', 'Sam', 'Jay', 'Guy', 'Jim'];
+
 	// add fps stats
 	if (FPS_STATS) {
 		const stats = new Stats();
@@ -139,6 +143,88 @@
 		})
 	})
 
+  // place a marker on the plane
+  document.addEventListener("mousedown", onMouseDown);
+
+  function onMouseDown(event) {
+    handleClick();
+  }
+
+  function getRayCaster() {
+    // normalized device coordinates
+    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+    const raycaster = new THREE.Raycaster();
+    const vector = new THREE.Vector3( mouse.x, mouse.y , 1).unproject( camera );
+    raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
+
+    return raycaster;
+  }
+
+  function handleClick() {
+    const raycaster = getRayCaster();
+    const vec = raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0)));
+
+    const colorMat	= new THREE.MeshBasicMaterial({
+      color: new THREE.Color( 0x000000 ),
+      side: THREE.DoubleSide
+    });
+
+    const outlineMat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color( 0xffffff ),
+      side: THREE.BackSide
+    });
+
+    const textMat	= new THREE.MeshBasicMaterial({
+      color: new THREE.Color( 0xffffff ),
+      side: THREE.DoubleSide
+    });
+
+    if (vec) {
+      const cylGeo	= new THREE.CylinderGeometry(0.03, 0.005, 0.2, 12);
+      const colorCylMesh	= new THREE.Mesh( cylGeo, colorMat );
+      colorCylMesh.position.x	= vec.x + cylGeo.parameters.radiusTop;
+      colorCylMesh.position.y	= cylGeo.parameters.height / 2;
+      colorCylMesh.position.z	= vec.z;
+      scene.add( colorCylMesh );
+
+      const outlineCylMesh	= new THREE.Mesh( cylGeo, outlineMat );
+      outlineCylMesh.position.x	= vec.x + cylGeo.parameters.radiusTop;
+      outlineCylMesh.position.y	= cylGeo.parameters.height / 2;
+      outlineCylMesh.position.z	= vec.z;
+      outlineCylMesh.scale.multiplyScalar(1.05);
+      scene.add( outlineCylMesh );
+
+      const loader = new THREE.FontLoader();
+
+      loader.load( './vendor/three.js/examples/fonts/helvetiker_bold.typeface.json', function ( font ) {
+
+        const size = 0.05;
+
+        const nameGeometry = new THREE.TextGeometry(names[Math.floor(Math.random() * names.length)], {
+          font: font,
+          size: size,
+          height: 0.001,
+          curveSegments: 12
+        });
+
+        const colorMesh	= new THREE.Mesh( nameGeometry, textMat );
+        colorMesh.position.x	= vec.x;
+        colorMesh.position.y	= cylGeo.parameters.height + cylGeo.parameters.height / 2;
+        colorMesh.position.z	= vec.z;
+        scene.add( colorMesh );
+
+        const backdropGeometry = new THREE.PlaneGeometry(0.15, 0.1, 1);
+        const backdropMesh = new THREE.Mesh(backdropGeometry, colorMat);
+        backdropMesh.position.x	= vec.x + backdropGeometry.parameters.width / 2.5;
+        backdropMesh.position.y	= cylGeo.parameters.height + backdropGeometry.parameters.height * 1.25;
+        backdropMesh.position.z	= vec.z;
+        scene.add(backdropMesh);
+      });
+
+    }
+  }
 
 	// Apply VR stereo rendering to renderer.
 	let vrEffect = null
