@@ -4,49 +4,15 @@
 <script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/85/three.js'></script>
 <!-- ar.js -->
 <script src="lib/ar.js"></script>
-<script src="lib/VReffect.js"></script>
-<script src="lib/VRcontrols.js"></script>
-<script src="lib/webvr-polyfill.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/3.9.0/firebase.js"></script>
 
-<style>
-  body {
-    padding:0;
-    margin: 0;
-    overflow: hidden;
-  }
-
-  .header {
-    background-color: rgba(255, 255, 255, 0.6);
-    position: absolute;
-    left: 93%;
-    width: 7%;
-    height: 500px;
-    margin: 0;
-    padding-top: 10px;
-    text-align: center;
-    font-size: 1.2em;
-  }
-
-  .header li {
-    list-style-type: none;
-  }
-</style>
-
-<body>
-  <div style='width:100%; z-index: 1;'>
-
-  <div class="header">
-    <ul id="nameList"></ul>
-  </div>
+<body style='margin : 0px; overflow: hidden; font-family: Monospace;'><div style='position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
 
 <script>
-	const FPS_STATS = false; // enable/disable fps counter on top
-	const STATIC_IMAGE = true; // enable for debug (no webcam)
+	const FPS_STATS = true; // enable/disable fps counter on top
+	const STATIC_IMAGE = false; // enable for debug (no webcam)
 	const IMAGE = 'grumpy.jpg'; // name of the image (in assets/)
-
-	const MAX_RADIUS = 0.5; // maximum radius to be away from the teacher points
 	//////////////////////////////////////////////////////////////////////////////////
 	//		Init
 	//////////////////////////////////////////////////////////////////////////////////
@@ -56,10 +22,7 @@
 		alpha: true
 	});
 	renderer.setClearColor(new THREE.Color('lightgrey'), 0);
-	renderer.setSize( 640, 480 );
-	renderer.domElement.style.position = 'absolute';
-	renderer.domElement.style.top = '0px';
-	renderer.domElement.style.left = '0px';
+	renderer.setSize( 800, 600 );
 	document.body.appendChild( renderer.domElement );
 	// array of functions for the rendering loop
 	const onRenderFcts= [];
@@ -71,7 +34,8 @@
   const names = ['Tim', 'Max', 'Tom', 'Kai', 'Sam', 'Jay', 'Guy', 'Jim'];
   const name = names[Math.floor(Math.random() * names.length)];
   const removeDelay = 10000;
-  const uid = () => new Date().getMilliseconds()+Math.floor(Math.random() * 1000);
+	// unique ID for this session (used for storing marker ID)
+  const uid = new Date().getMilliseconds()+Math.floor(Math.random() * 1000);
 
 	// add fps stats
 	if (FPS_STATS) {
@@ -92,9 +56,6 @@
     messagingSenderId: "580810798803"
   };
   firebase.initializeApp(config);
-
-  // Get all markers and place them
-  getAllMarkerData();
 
 	//////////////////////////////////////////////////////////////////////////////////
 	//		Initialize a basic camera
@@ -149,7 +110,7 @@
 	////////////////////////////////////////////////////////////////////////////////
 	const markerControls = new THREEx.ArMarkerControls(arToolkitContext, camera, {
 		type : 'pattern',
-		patternUrl : 'markers/hiro.pat',
+		patternUrl : 'markers/zeiss.pat',
 		changeMatrixMode: 'cameraTransformMatrix'
 	});
 	// as we do changeMatrixMode: 'cameraTransformMatrix', start with invisible scene
@@ -166,8 +127,8 @@
 
 	const material = new THREE.MeshPhongMaterial( {
 		displacementMap: displacementMap,
-		displacementScale: 0, // 0.5
-		displacementBias: 0,
+		displacementScale: 0.5, // 0.5
+		displacementBias: -1,
 		map: texture
 	} );
 
@@ -175,7 +136,7 @@
 	plane.rotation.x = Math.PI*1.5;
 	scene.add( plane );
 
-	const light = new THREE.AmbientLight( 0xffffff ); // soft white light
+	const light = new THREE.AmbientLight( 0xffffff ); // add light because standardMesh doesnt work in the dark
 	scene.add( light );
 	//////////////////////////////////////////////////////////////////////////////////
 	//		render the whole thing on the page
@@ -218,8 +179,7 @@
           z: vec.z
         },
         name,
-				uid: uid(),
-        teacher: true
+				uid
       };
 			// placemarker on scene
       placeMarker(marker);
@@ -228,79 +188,20 @@
     }
   }
 
-  setInterval(() => {
-    getAllMarkerData();
-  }, 500);
-
-  function getAllMarkerData () {
-    firebase.database().ref('/markers').once('value').then(function(snapshot) {
-      for( var i = scene.children.length - 1; i >= 0;) {
-        if (scene.children[i] && scene.children[i].geometry && (scene.children[i].geometry.constructor.name === 'CylinderGeometry' ||
-          scene.children[i].geometry.constructor.name === 'TextGeometry')) {
-          scene.remove(scene.children[i]);
-        }
-        i--;
-      }
-
-      const teacherPositions = [];
-      const teacherIds = [];
-
-      for (let id in snapshot.val()) {
-        if (snapshot.val()[id].teacher) {
-          teacherPositions.push(snapshot.val()[id]);
-          teacherIds.push(id);
-        }
-      }
-
-      let listHtml = '';
-
-      for (let id in snapshot.val()) {
-        const valid = isNearGoal(snapshot.val()[id].position, teacherPositions.map((teacherPos) => teacherPos.position));
-
-        placeMarker(snapshot.val()[id], valid);
-
-        listHtml += teacherIds.indexOf(id) === -1 ? `<li>${snapshot.val()[id].name}${valid ? '✓' : '✕'}</li>` : '';
-      }
-
-      document.getElementById('nameList').innerHTML = listHtml;
-    });
-  }
-
-  function isNearGoal (position, teacherPositions) {
-    for (let teacherPos of teacherPositions) {
-      const distance = Math.sqrt(Math.pow(teacherPos.x - position.x, 2) + Math.pow(teacherPos.z - position.z, 2));
-
-      console.log(distance);
-      if (distance < MAX_RADIUS) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   // write marker to database
-  function writeMarkerData ({position, name, uid, teacher}) {
+  function writeMarkerData ({position, name, uid}) {
     firebase.database().ref('markers/' + uid).set({
       position: position,
-      name: name,
-      teacher
+      name: name
     }).then(() => console.log(`updated marker ${uid} to ${JSON.stringify(position)}`));
   }
 
-  function placeMarker (marker, valid) {
+	let prev_marker;
+  function placeMarker (marker) {
     const vec = marker.position;
-    const name = marker.name;
-
-    let color;
-    if (marker.teacher) {
-      color = 0x2222aa;
-    } else {
-      color = valid ? 0x22aa22 : 0xaa2222;
-    }
 
     const colorMat	= new THREE.MeshBasicMaterial({
-      color: new THREE.Color( color ),
+      color: new THREE.Color( 0x000000 ),
       side: THREE.DoubleSide
     });
 
@@ -310,7 +211,10 @@
     colorCylMesh.position.y	= cylGeo.parameters.height / 2;
     colorCylMesh.position.z	= vec.z;
     scene.add( colorCylMesh );
-
+		if (prev_marker) {
+			scene.remove( prev_marker );
+		}
+		prev_marker = colorCylMesh;
   }
 
 </script></body>
