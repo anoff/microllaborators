@@ -18,7 +18,7 @@
 	//////////////////////////////////////////////////////////////////////////////////
 	// init renderer
 	const renderer	= new THREE.WebGLRenderer({
-		antialias	: false,
+		antialias	: true,
 		alpha: true
 	});
 	renderer.setClearColor(new THREE.Color('lightgrey'), 0);
@@ -59,9 +59,6 @@
     messagingSenderId: "580810798803"
   };
   firebase.initializeApp(config);
-
-  // Get all markers and place them
-  getAllMarkerData();
 
 	//////////////////////////////////////////////////////////////////////////////////
 	//		Initialize a basic camera
@@ -132,7 +129,7 @@
 	const material = new THREE.MeshPhongMaterial( {
 		displacementMap: displacementMap,
 		displacementScale: 0, // 0.5
-		displacementBias: 0.5,
+		displacementBias: 0,
 		map: texture
 	} );
 
@@ -200,35 +197,13 @@
     }
   }
 
-  setInterval(() => {
-    getAllMarkerData();
-  }, 500);
-
-  function getAllMarkerData () {
-    firebase.database().ref('/markers').once('value').then(function(snapshot) {
-      const oldMarkers = [];
-
-      for( var i = scene.children.length - 1; i >= 0;) {
-        if (scene.children[i] && scene.children[i].geometry && (scene.children[i].geometry.constructor.name === 'CylinderGeometry' ||
-          scene.children[i].geometry.constructor.name === 'TextGeometry')) {
-          scene.remove(scene.children[i]);
-        }
-        i--;
-      }
-
-      for (let id in snapshot.val()) {
-        placeMarker(snapshot.val()[id]);
-      }
-    });
-  }
-
   // write marker to database
   function writeMarkerData ({position, name, uid}) {
 		console.log(uid)
     firebase.database().ref('markers/' + uid).set({
       position: position,
       name: name
-    });
+    }).then(() => console.log('asdfasdfadsf'));
   }
 
 	let prev_marker;
