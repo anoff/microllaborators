@@ -54,9 +54,6 @@
   }
 </style>
 
-
-
-
 <body>
   <div class="headerBar">
     <span>⁉️Question⁉️</span>
@@ -73,7 +70,7 @@
 <script>
 	const FPS_STATS = false; // enable/disable fps counter on top
 	const STATIC_IMAGE = true; // enable for debug (no webcam)
-	const IMAGE = 'grumpy.jpg'; // name of the image (in assets/)
+	const IMAGE = 'cipolla.jpg'; // name of the image (in assets/)
 
 	const MAX_RADIUS = 0.5; // maximum radius to be away from the teacher points
 	//////////////////////////////////////////////////////////////////////////////////
@@ -97,9 +94,6 @@
 
 	// required for raytracing
   const mouse = { x:0, y:0 };
-  const names = ['Tim', 'Max', 'Tom', 'Kai', 'Sam', 'Jay', 'Guy', 'Jim', 'Andres', 'Steffen', 'Samy', 'Franzi', 'Lola', 'Anna'];
-  const name = names[Math.floor(Math.random() * names.length)];
-  const removeDelay = 10000;
   const uid = () => new Date().getMilliseconds()+Math.floor(Math.random() * 1000);
 
 	// add fps stats
@@ -139,7 +133,7 @@
 	};
 	if (STATIC_IMAGE) {
 		arOptions.sourceType = 'image';
-		arOptions.sourceUrl = '../assets/hiro_screenshot.png';
+		arOptions.sourceUrl = '../assets/zeiss_marker_screenshot.png';
 	}
 	const arToolkitSource = new THREEx.ArToolkitSource(arOptions);
 	arToolkitSource.init(function onReady(){
@@ -249,7 +243,6 @@
           y: vec.y,
           z: vec.z
         },
-        name,
 				uid: uid(),
         teacher: true
       };
@@ -268,7 +261,7 @@
     firebase.database().ref('/markers').once('value').then(function(snapshot) {
 
       for (var i = scene.children.length - 1; i >= 0; i--) {
-        if (scene.children[i] && scene.children[i].geometry && scene.children[i].geometry.constructor.name === 'CylinderGeometry') {
+        if (scene.children[i] && scene.children[i].geometry && ['CircleGeometry', 'CylinderGeometry'].indexOf(scene.children[i].geometry.constructor.name) > -1) {
           scene.remove(scene.children[i]);
         }
     }
@@ -308,7 +301,7 @@
   }
 
   // write marker to database
-  function writeMarkerData ({position, name, uid, teacher}) {
+  function writeMarkerData ({position, name='teacher', uid, teacher}) {
     firebase.database().ref('markers/' + uid).set({
       position: position,
       name: name,
@@ -318,27 +311,36 @@
 
   function placeMarker (marker, valid) {
     const vec = marker.position;
-    const name = marker.name;
 
-    let color;
+    let mesh;
     if (marker.teacher) {
-      color = 0x2222aa;
+      const color = 0x2222aa;
+      const cylColor	= new THREE.MeshBasicMaterial({
+        color: new THREE.Color( color ),
+        side: THREE.DoubleSide
+      });
+
+      const cylGeo	= new THREE.CircleGeometry(MAX_RADIUS, 32);//new THREE.CylinderGeometry(0.05, 0.005, 0.25, 12);
+      mesh	= new THREE.Mesh( cylGeo, cylColor );
+      mesh.position.x	= vec.x;
+      mesh.position.y	= 0.05;
+      mesh.position.z	= vec.z;
+      mesh.rotation.x = Math.PI*1.5;
     } else {
-      color = valid ? 0x22aa22 : 0xaa2222;
+      const color = valid ? 0x22aa22 : 0xaa2222;
+      const cylColor	= new THREE.MeshBasicMaterial({
+        color: new THREE.Color( color ),
+        side: THREE.DoubleSide
+      });
+
+      const cylGeo	= new THREE.CylinderGeometry(0.1, 0.005, 0.25, 12);
+      mesh	= new THREE.Mesh( cylGeo, cylColor );
+      mesh.position.x	= vec.x + cylGeo.parameters.radiusTop;
+      mesh.position.y	= cylGeo.parameters.height / 2;
+      mesh.position.z	= vec.z;
     }
-
-    const colorMat	= new THREE.MeshBasicMaterial({
-      color: new THREE.Color( color ),
-      side: THREE.DoubleSide
-    });
-
-    const cylGeo	= new THREE.CylinderGeometry(0.05, 0.005, 0.25, 12);
-    const colorCylMesh	= new THREE.Mesh( cylGeo, colorMat );
-    colorCylMesh.position.x	= vec.x + cylGeo.parameters.radiusTop;
-    colorCylMesh.position.y	= cylGeo.parameters.height / 2;
-    colorCylMesh.position.z	= vec.z;
-    scene.add( colorCylMesh );
-
+    
+    scene.add( mesh );
   }
 
   // get text from input and write to db
