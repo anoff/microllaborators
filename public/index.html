@@ -6,6 +6,9 @@
 <script src="lib/ar.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/3.9.0/firebase.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+<link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
 
 <style>
   body {
@@ -21,26 +24,33 @@
     margin: 0;
   }
 
-  .questionBar {
-    width: 100%;
-    height: 40px;
-    z-index: 1;
-    background-color: rgba(255, 255, 255, 0.7);
-    position: absolute;
-    display: flex;
-  }
-
   #questionText {
-    font-size: 1.2em;
-    margin: 10px 0 10px 50px;
+    font-size: 1.5em;
   }
 
+  .imageOverlay {
+    position: absolute;
+    top: 88%;
+    left: 92%;
+    width: 100px;
+  }
 </style>
 
 <body>
 
-  <div class="questionBar">
-    <h3 id="questionText">Question:</h3>
+  <!-- The drawer is always open in large screens. The header is always shown,
+    even in small screens. -->
+  <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+    <header class="mdl-layout__header">
+      <div class="mdl-layout__header-row">
+        <span class="mdl-layout-title" id="questionText"></span>
+      </div>
+    </header>
+    <main class="mdl-layout__content">
+      <div class="page-content">
+        <img src="../assets/zeiss_logo.png" class="imageOverlay"/>
+      </div>
+    </main>
   </div>
 
   <div class="arContainer">
