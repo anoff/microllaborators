@@ -159,7 +159,7 @@
 <script>
 	const FPS_STATS = false; // enable/disable fps counter on top
 	const STATIC_IMAGE = true; // enable for debug (no webcam)
-	const IMAGE = 'grumpy.jpg'; // name of the image (in assets/)
+	const IMAGE = 'cipolla.jpg'; // name of the image (in assets/)
 
 	const MAX_RADIUS = 0.5; // maximum radius to be away from the teacher points
 	//////////////////////////////////////////////////////////////////////////////////
@@ -281,8 +281,8 @@
 
 	const material = new THREE.MeshPhongMaterial( {
 		displacementMap: displacementMap,
-		displacementScale: 0, // 0.5
-		displacementBias: 0,
+		displacementScale: 0.5, // 0.5
+		displacementBias: -0.5 ,
 		map: texture
 	} );
 
@@ -370,7 +370,7 @@
 
         placeMarker(snapshot.val()[id], valid);
 
-        listHtml += teacherIds.indexOf(id) === -1 ? `<a class="mdl-navigation__link" style="font-size: 1.5em;">${snapshot.val()[id].name}${valid ? ' ✓' : ' ✕'}</a>` : '';
+        listHtml += teacherIds.indexOf(id) === -1 ? `<a class="mdl-navigation__link" style="font-size: 1.5em;">${snapshot.val()[id].name} ${valid ? '✅' : '🔥'}</a>` : '';
       }
 
       document.getElementById('nameList').innerHTML = listHtml;
