@@ -61,6 +61,8 @@
 <script>
 	const FPS_STATS = true; // enable/disable fps counter on top
 	const STATIC_IMAGE = false; // enable for debug (no webcam)
+	const STUDENTS = ['Joerg', 'Annika', 'Cosmo', 'Suzisahne', 'Carl Z.', 'Axel', 'Tim', 'Andreas']
+	
 	//////////////////////////////////////////////////////////////////////////////////
 	//		Init
 	//////////////////////////////////////////////////////////////////////////////////
@@ -79,8 +81,7 @@
 
 	// required for raytracing
   const mouse = { x:0, y:0 };
-  const names = ['Joerg', 'Annika', 'Cosmo', 'Suzisahne', 'Carl Z.', 'Axel', 'Tim', 'Andreas'];
-  const name = names[Math.floor(Math.random() * names.length)];
+  const name = STUDENTS[Math.floor(Math.random() * STUDENTS.length)];
   const removeDelay = 10000;
 	// unique ID for this session (used for storing marker ID)
   const uid = new Date().getMilliseconds()+Math.floor(Math.random() * 1000);
@@ -105,15 +106,9 @@
   };
   firebase.initializeApp(config);
 
-	//////////////////////////////////////////////////////////////////////////////////
-	//		Initialize a basic camera
-	//////////////////////////////////////////////////////////////////////////////////
 	// Create a camera
 	const camera = new THREE.Camera();
 	scene.add(camera);
-	////////////////////////////////////////////////////////////////////////////////
-	//          handle arToolkitSource
-	////////////////////////////////////////////////////////////////////////////////
 	let arOptions = {
 		sourceType: 'webcam'
 	};
@@ -132,10 +127,6 @@
 		// handle arToolkitSource resize
 		arToolkitSource.onResize(renderer.domElement)		
 	});
-	////////////////////////////////////////////////////////////////////////////////
-	//          initialize arToolkitContext
-	////////////////////////////////////////////////////////////////////////////////
-	
 	// create atToolkitContext
 	const arToolkitContext = new THREEx.ArToolkitContext({
 		cameraParametersUrl: 'markers/camera_para.dat',
@@ -155,7 +146,6 @@
 		scene.visible = camera.visible
 	});
 		
-	////////////////////////////////////////////////////////////////////////////////
 	const markerControls = new THREEx.ArMarkerControls(arToolkitContext, camera, {
 		type : 'pattern',
 		patternUrl : 'markers/zeiss.pat',
@@ -163,20 +153,22 @@
 	});
 	// as we do changeMatrixMode: 'cameraTransformMatrix', start with invisible scene
 	scene.visible = false;
-	//////////////////////////////////////////////////////////////////////////////////
-	//		add an object in the scene
-	//////////////////////////////////////////////////////////////////////////////////
-	// add a torus knot	
 	
 	const geometry	= new THREE.PlaneGeometry(5, 5, 100, 100);
 
 	firebase.database().ref('image')
 		.on('value', snapshot => {
 			const filename = 'assets/' + snapshot.val();
+			console.log('Loading image for AR: ', filename);
 			initImagePlane(filename);
 		});
-
+	
+	let plane;
 	function initImagePlane(filename) {
+		// delete plane if it exists
+		if (plane) {
+			scene.remove(plane);
+		}
 		const textureLoader = new THREE.TextureLoader();
 		const displacementMap = textureLoader.load(filename);
 		const texture = textureLoader.load(filename);
@@ -187,16 +179,14 @@
 			map: texture
 		};
 		const material = new THREE.MeshPhongMaterial(materialOptions);
-		const plane = new THREE.Mesh(geometry, material);
+		plane = new THREE.Mesh(geometry, material);
 		plane.rotation.x = Math.PI*1.5;
 		scene.add(plane);
 	}
 
 	const light = new THREE.AmbientLight( 0xffffff ); // add light because standardMesh doesnt work in the dark
 	scene.add( light );
-	//////////////////////////////////////////////////////////////////////////////////
-	//		render the whole thing on the page
-	//////////////////////////////////////////////////////////////////////////////////
+
 	// render the scene
 	onRenderFcts.push(function(){
 		renderer.render( scene, camera );
@@ -273,7 +263,7 @@
 		prev_marker = colorCylMesh;
   }
 
-  // change the question text
+  // update the question
   firebase.database().ref('question')
     .on('value', snapshot => {
     const questionElm = document.getElementById('questionText');

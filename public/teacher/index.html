@@ -61,9 +61,9 @@
       url('../assets/plant.jpg') bottom right 15% no-repeat #4154b2;
   }
 
-  .soulImg {
+  .pollenImg {
     background:
-      url('../assets/souleater.jpg') bottom right 15% no-repeat #4154b2;
+      url('../assets/pollen.jpg') bottom right 15% no-repeat #4154b2;
   }
 
   .transistorImg {
@@ -90,8 +90,8 @@
         </button>
       </div>
       <div class="mdl-layout__tab-bar mdl-js-ripple-effect">
-        <a href="#fixed-tab-1" class="mdl-layout__tab is-active">View</a>
-        <a href="#fixed-tab-2" class="mdl-layout__tab">Gallery</a>
+        <a href="#fixed-tab-1" class="mdl-layout__tab is-active" onclick="clearMarkers()">View</a>
+        <a href="#fixed-tab-2" class="mdl-layout__tab" onclick="clearMarkers()">Gallery</a>
       </div>
     </header>
     <div class="mdl-layout__drawer">
@@ -120,11 +120,11 @@
               </div>
             </div>
             <div class="demo-card-square mdl-card mdl-shadow--2dp">
-              <div class="mdl-card__title mdl-card--expand soulImg">
-                <h2 class="mdl-card__title-text">Souleater</h2>
+              <div class="mdl-card__title mdl-card--expand pollenImg">
+                <h2 class="mdl-card__title-text">Pollen</h2>
               </div>
               <div class="mdl-card__supporting-text">
-                A detail view of the souleater bug, focused on the fangs.
+                Raster electron microscope image of some common european pollen.
               </div>
               <div class="mdl-card__actions mdl-card--border">
                 <a href="#fixed-tab-1" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" onclick="changeImg('souleater')">
@@ -181,6 +181,11 @@
 	// init scene and camera
 	const scene	= new THREE.Scene();
 
+  // turn off marker setting in image selection
+  let enableMarkers = true;
+  function enablePlacement(val) {
+    enableMarkers = val;
+  }
 	// required for raytracing
   const mouse = { x:0, y:0 };
   const uid = () => new Date().getMilliseconds()+Math.floor(Math.random() * 1000);
@@ -272,23 +277,34 @@
 	// add a torus knot	
 	
 	const geometry	= new THREE.PlaneGeometry(5, 5, 100, 100);
-	const textureLoader = new THREE.TextureLoader();
-	const displacementMap = textureLoader.load('../assets/' + IMAGE);
-	const texture = textureLoader.load('../assets/' + IMAGE);
+	firebase.database().ref('image')
+		.on('value', snapshot => {
+			const filename = '../assets/' + snapshot.val();
+			console.log('Loading image for AR: ', filename);
+			initImagePlane(filename);
+		});
 
-  // insert texture to firebase
-  firebase.database().ref('image').set('../assets/' + IMAGE);
-
-	const material = new THREE.MeshPhongMaterial( {
-		displacementMap: displacementMap,
-		displacementScale: 0.5, // 0.5
-		displacementBias: -0.5 ,
-		map: texture
-	} );
-
-	const plane = new THREE.Mesh( geometry, material);
-	plane.rotation.x = Math.PI*1.5;
-	scene.add( plane );
+	let plane;
+	function initImagePlane(filename) {
+    clearMarkers();
+		// delete plane if it exists
+		if (plane) {
+			scene.remove(plane);
+		}
+		const textureLoader = new THREE.TextureLoader();
+		const displacementMap = textureLoader.load(filename);
+		const texture = textureLoader.load(filename);
+		const materialOptions = {
+			displacementMap: displacementMap,
+			displacementScale: 0.5, // 0.5
+			displacementBias: -1,
+			map: texture
+		};
+		const material = new THREE.MeshPhongMaterial(materialOptions);
+		plane = new THREE.Mesh(geometry, material);
+		plane.rotation.x = Math.PI*1.5;
+		scene.add(plane);
+	}
 
 	const light = new THREE.AmbientLight( 0xffffff ); // soft white light
 	scene.add( light );
@@ -446,7 +462,7 @@
   }
 
   // clear all markers
-  function clearMarkers () {
+  function clearMarkers() {
     firebase.database().ref('markers/').set(null);
   }
 
