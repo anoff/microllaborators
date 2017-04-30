@@ -262,7 +262,7 @@
       side: THREE.DoubleSide
     });
 
-    const cylGeo	= new THREE.CylinderGeometry(0.05, 0.005, 0.25, 12);
+    const cylGeo	= new THREE.CylinderGeometry(0.1, 0.005, 0.25, 12);
     const colorCylMesh	= new THREE.Mesh( cylGeo, colorMat );
     colorCylMesh.position.x	= vec.x + cylGeo.parameters.radiusTop;
     colorCylMesh.position.y	= cylGeo.parameters.height / 2;
