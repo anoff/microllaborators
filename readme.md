@@ -50,7 +50,7 @@ If you are Tim or Andreas you can deploy the code to surge at [https://zeisshack
 npm run deploy
 ```
 
-If you're someone else just put the `public` folder and put it on any static site host.
+If you're someone else just put the `public` folder on any static hosting.
 All the dynamic features are **client only** and realized over [firebase](http://firebase.com).
 
 ## ⚖️ License
