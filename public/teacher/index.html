@@ -34,6 +34,42 @@
     left: 92%;
     width: 100px;
   }
+
+  .gallery {
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    position: absolute;
+    justify-content: center;
+    align-content: center;
+    display: flex;
+    padding-top: 10%;
+  }
+
+  .demo-card-square.mdl-card {
+    width: 400px;
+    height: 400px;
+    margin: 50px;
+  }
+  .demo-card-square > .mdl-card__title {
+    color: #fff;
+    background-size: cover;
+  }
+
+  .plantImg {
+    background:
+      url('../assets/plant.jpg') bottom right 15% no-repeat #4154b2;
+  }
+
+  .soulImg {
+    background:
+      url('../assets/souleater.jpg') bottom right 15% no-repeat #4154b2;
+  }
+
+  .transistorImg {
+    background:
+      url('../assets/transistor.jpg') bottom right 15% no-repeat #4154b2;
+  }
 </style>
 
 <body>
@@ -53,6 +89,10 @@
           Clear Markers
         </button>
       </div>
+      <div class="mdl-layout__tab-bar mdl-js-ripple-effect">
+        <a href="#fixed-tab-1" class="mdl-layout__tab is-active">View</a>
+        <a href="#fixed-tab-2" class="mdl-layout__tab">Gallery</a>
+      </div>
     </header>
     <div class="mdl-layout__drawer">
       <span class="mdl-layout-title">Students</span>
@@ -60,6 +100,54 @@
       </nav>
     </div>
     <main class="mdl-layout__content">
+      <section class="mdl-layout__tab-panel is-active" id="fixed-tab-1">
+        <div class="page-content"></div>
+      </section>
+      <section class="mdl-layout__tab-panel" id="fixed-tab-2">
+        <div class="page-content">
+          <div class="gallery">
+            <div class="demo-card-square mdl-card mdl-shadow--2dp">
+              <div class="mdl-card__title mdl-card--expand plantImg">
+                <h2 class="mdl-card__title-text">Plant</h2>
+              </div>
+              <div class="mdl-card__supporting-text">
+                A slice through view of a plant cell from a german leaf tree.
+              </div>
+              <div class="mdl-card__actions mdl-card--border">
+                <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" onclick="changeImg('plant')">
+                  Choose
+                </a>
+              </div>
+            </div>
+            <div class="demo-card-square mdl-card mdl-shadow--2dp">
+              <div class="mdl-card__title mdl-card--expand soulImg">
+                <h2 class="mdl-card__title-text">Souleater</h2>
+              </div>
+              <div class="mdl-card__supporting-text">
+                A detail view of the souleater bug, focused on the fangs.
+              </div>
+              <div class="mdl-card__actions mdl-card--border">
+                <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" onclick="changeImg('souleater')">
+                  Choose
+                </a>
+              </div>
+            </div>
+            <div class="demo-card-square mdl-card mdl-shadow--2dp">
+              <div class="mdl-card__title mdl-card--expand transistorImg">
+                <h2 class="mdl-card__title-text">Transistor</h2>
+              </div>
+              <div class="mdl-card__supporting-text">
+                High detail view of a transistor needed for the material science department.
+              </div>
+              <div class="mdl-card__actions mdl-card--border">
+                <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" onclick="changeImg('transistor')">
+                  Choose
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
       <div class="page-content">
         <img src="../assets/zeiss_logo.png" class="imageOverlay"/>
       </div>
@@ -71,7 +159,7 @@
 <script>
 	const FPS_STATS = false; // enable/disable fps counter on top
 	const STATIC_IMAGE = true; // enable for debug (no webcam)
-	const IMAGE = 'pollen.jpg'; // name of the image (in assets/)
+	const IMAGE = 'cipolla.jpg'; // name of the image (in assets/)
 
 	const MAX_RADIUS = 0.5; // maximum radius to be away from the teacher points
 	//////////////////////////////////////////////////////////////////////////////////
@@ -315,7 +403,7 @@
 
     let mesh;
     if (marker.teacher) {
-      const color = 0x2222aa;
+      const color = 0x4154b2;
       const cylColor	= new THREE.MeshBasicMaterial({
         color: new THREE.Color( color ),
         side: THREE.DoubleSide
@@ -328,7 +416,7 @@
       mesh.position.z	= vec.z;
       mesh.rotation.x = Math.PI*1.5;
     } else {
-      const color = valid ? 0x00ff00 : 0xff0000;
+      const color = valid ? 0x50ae55 : 0xe72365;
       const cylColor	= new THREE.MeshBasicMaterial({
         color: new THREE.Color( color ),
         side: THREE.DoubleSide
@@ -360,5 +448,10 @@
   // clear all markers
   function clearMarkers () {
     firebase.database().ref('markers/').set(null);
+  }
+
+  function changeImg (name) {
+    const path = `../assets/${name}.jpg`;
+    firebase.database().ref('image/').set(path);
   }
 </script></body>
