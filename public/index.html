@@ -61,7 +61,6 @@
 <script>
 	const FPS_STATS = true; // enable/disable fps counter on top
 	const STATIC_IMAGE = false; // enable for debug (no webcam)
-	const IMAGE = 'grumpy.jpg'; // name of the image (in assets/)
 	//////////////////////////////////////////////////////////////////////////////////
 	//		Init
 	//////////////////////////////////////////////////////////////////////////////////
@@ -80,7 +79,7 @@
 
 	// required for raytracing
   const mouse = { x:0, y:0 };
-  const names = ['Tim', 'Max', 'Tom', 'Kai', 'Sam', 'Jay', 'Guy', 'Jim'];
+  const names = ['Joerg', 'Annika', 'Cosmo', 'Suzisahne', 'Carl Z.', 'Axel', 'Tim', 'Andreas'];
   const name = names[Math.floor(Math.random() * names.length)];
   const removeDelay = 10000;
 	// unique ID for this session (used for storing marker ID)
@@ -120,7 +119,7 @@
 	};
 	if (STATIC_IMAGE) {
 		arOptions.sourceType = 'image';
-		arOptions.sourceUrl = 'assets/hiro_screenshot.png';
+		arOptions.sourceUrl = 'assets/zeiss_marker_screenshot.png';
 	}
 	const arToolkitSource = new THREEx.ArToolkitSource(arOptions);
 	arToolkitSource.init(function onReady(){
