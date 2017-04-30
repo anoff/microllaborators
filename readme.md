@@ -80,7 +80,7 @@ By moving their phone around they can look at the image from different angles wi
 
 ![student places marker](./demo/student_3d.png)
 
-![student AR](https://j.gifs.com/66qBzn.gif)
+![student AR](./demo/student_ar.gif)
 
 ### evaluation of responses
 
