@@ -127,7 +127,7 @@
                 Raster electron microscope image of some common european pollen.
               </div>
               <div class="mdl-card__actions mdl-card--border">
-                <a href="#fixed-tab-1" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" onclick="changeImg('souleater')">
+                <a href="#fixed-tab-1" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" onclick="changeImg('pollen')">
                   Choose
                 </a>
               </div>
@@ -419,10 +419,12 @@
 
     let mesh;
     if (marker.teacher) {
-      const color = 0x4154b2;
+      const color = 0xffff00;
       const cylColor	= new THREE.MeshBasicMaterial({
         color: new THREE.Color( color ),
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.6
       });
 
       const cylGeo	= new THREE.CircleGeometry(MAX_RADIUS, 32);//new THREE.CylinderGeometry(0.05, 0.005, 0.25, 12);

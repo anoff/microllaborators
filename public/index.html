@@ -175,7 +175,7 @@
 		const materialOptions = {
 			displacementMap: displacementMap,
 			displacementScale: 0.5, // 0.5
-			displacementBias: -1,
+			displacementBias: -0.2,
 			map: texture
 		};
 		const material = new THREE.MeshPhongMaterial(materialOptions);
@@ -247,7 +247,7 @@
     const vec = marker.position;
 
     const colorMat	= new THREE.MeshBasicMaterial({
-      color: new THREE.Color( 0x000000 ),
+      color: new THREE.Color( 0xffff00 ),
       side: THREE.DoubleSide
     });
 
