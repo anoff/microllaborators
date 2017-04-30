@@ -1,4 +1,4 @@
-# microlabborators �‍👩‍👦‍👦🔬👩‍🏫
+# microlabborators 👩‍👦‍👦🔬👩‍🏫
 
 > put microscope images into AR for advanced collaboration 🔮🔬👩‍🏫
 
@@ -55,9 +55,12 @@ All the dynamic features are **client only** and realized over [firebase](http:/
 
 ## ⚖️ License
 
-MIT
+[MIT](./LICENSE)
 
 ## 🗂 Used puzzle pieces / Attribution
 
-* [AR.js](https://github.com/jeromeetienne/AR.js) helped us a lot to get off the ground
-* 
+* [AR.js](https://github.com/jeromeetienne/AR.js): helped us a lot to get off the ground
+* [firebase](firebase.google.com): allowed us to do realtime collaboration without backend
+* [three.js](https://github.com/jeromeetienne/AR.js/tree/master/three.js): used for 3D markers
+* [material design lite](https://getmdl.io/components/index.html): fancy design
+* [Zeiss](https://www.zeiss.com): thanks for hosting and guiding us during the hackathon
