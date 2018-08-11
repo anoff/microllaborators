@@ -1,4 +1,4 @@
-# microlabborators 👩‍👦‍👦🔬👩‍🏫
+# microllaborators 👩‍👦‍👦🔬👩‍🏫
 
 > put microscope images into AR for advanced collaboration 🔮🔬👩‍🏫
 
@@ -27,13 +27,13 @@ Currently there are two separate views implemented for student and teachers. In 
 
 ### 👨‍🎓 student
 
-[https://zeisshackathon.surge.sh](https://zeisshackathon.surge.sh)
+[https://zeisshack.surge.sh](https://zeisshack.surge.sh)
 
 ![AR marker](./public/markers/zeiss.jpg)
 
 ### 👩‍🏫 teacher
 
-[https://zeisshackathon.surge.sh/teacher](https://zeisshackathon.surge.sh/teacher)
+[https://zeisshack.surge.sh/teacher](https://zeisshack.surge.sh/teacher)
 
 ### running the server
 
@@ -46,7 +46,7 @@ npm start
 
 ### deploying the website
 
-If you are Tim or Andreas you can deploy the code to surge at [zeisshackathon.surge.sh](https://zeisshackathon.surge.sh)
+If you are Tim or Andreas you can deploy the code to surge at [zeisshack.surge.sh](https://zeisshack.surge.sh)
 
 ```sh
 npm run deploy
